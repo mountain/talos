@@ -18,40 +18,40 @@
       buf)))
 
 (defroutes apiroutes
-  (GET "/:index/_train" [index]
-    (fn [req]
-      (response {:message "OK"})))
-  (GET "/:index/_index" [index]
-    (fn [req]
-      (response {:message "OK"})))
-  (POST "/:index/:type" [index type]
-    (fn [req]
-      (let [body (if-let [len (get-in req [:headers "content-length"])]
-                   (slurp-binary (:body req) (Integer/parseInt len) true))
-            req-body (parse-string (String. body (java.nio.charset.Charset/forName "UTF-8")))
-            body (if-let [len (get-in (:es-result req) [:headers "content-length"])]
-                   (slurp-binary (:body (:es-result req)) (Integer/parseInt len) false))
-            resp-body (parse-string (String. body (java.nio.charset.Charset/forName "UTF-8")))]
+           (GET "/:index/_train" [index]
+             (fn [req]
+               (response {:message "OK"})))
+           (GET "/:index/_index" [index]
+             (fn [req]
+               (response {:message "OK"})))
+           (POST "/:index/:type" [index type]
+             (fn [req]
+               (let [body (if-let [len (get-in req [:headers "content-length"])]
+                            (slurp-binary (:body req) (Integer/parseInt len) true))
+                     req-body (parse-string (String. body (java.nio.charset.Charset/forName "UTF-8")))
+                     body (if-let [len (get-in (:es-result req) [:headers "content-length"])]
+                            (slurp-binary (:body (:es-result req)) (Integer/parseInt len) false))
+                     resp-body (parse-string (String. body (java.nio.charset.Charset/forName "UTF-8")))]
 
-        (add-doc conn index type (get resp-body "_id") req-body)
+                 (add-doc conn index type (get resp-body "_id") req-body)
 
-        (response {:message "OK"}))))
-  (POST "/:index/:type/:id" [index type id]
-    (fn [req]
-      (let [body (if-let [len (get-in req [:headers "content-length"])]
-                   (slurp-binary (:body req) (Integer/parseInt len) true))
-            bstr (String. body (java.nio.charset.Charset/forName "UTF-8"))
-            args (parse-string bstr)]
-        (add-doc conn index type id args)
-        (response {:message "OK"}))))
-  (PUT "/:index/:type/:id" [index type id]
-    (fn [req]
-      (let [body (if-let [len (get-in req [:headers "content-length"])]
-                   (slurp-binary (:body req) (Integer/parseInt len) true))
-            bstr (String. body (java.nio.charset.Charset/forName "UTF-8"))
-            args (parse-string bstr)]
-        (add-doc conn index type id args)
-        (response {:message "OK"}))))
-  (GET "/:index/:type/:id/_rec" [index type id]
-    (fn [req]
-      (response {:message "OK"}))))
+                 (response {:message "OK"}))))
+           (POST "/:index/:type/:id" [index type id]
+             (fn [req]
+               (let [body (if-let [len (get-in req [:headers "content-length"])]
+                            (slurp-binary (:body req) (Integer/parseInt len) true))
+                     bstr (String. body (java.nio.charset.Charset/forName "UTF-8"))
+                     args (parse-string bstr)]
+                 (add-doc conn index type id args)
+                 (response {:message "OK"}))))
+           (PUT "/:index/:type/:id" [index type id]
+             (fn [req]
+               (let [body (if-let [len (get-in req [:headers "content-length"])]
+                            (slurp-binary (:body req) (Integer/parseInt len) true))
+                     bstr (String. body (java.nio.charset.Charset/forName "UTF-8"))
+                     args (parse-string bstr)]
+                 (add-doc conn index type id args)
+                 (response {:message "OK"}))))
+           (GET "/:index/:type/:id/_rec" [index type id]
+             (fn [req]
+               (response {:message "OK"}))))

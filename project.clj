@@ -26,4 +26,4 @@
   :resource-paths ["resources"]
 
   :main talos.main
-)
+  )

@@ -2,15 +2,15 @@ package org.talos.lda;
 
 public class Inferencer {
 
-    public Model  training;
+    public Model training;
+    public int niters = 100;
     private Model model;
-    public int    niters = 100;
 
     // inference new model ~ getting data from a specified dataset
     public Model inference(int[] doc) {
         model = new Model();
         model.M = 1;
-        model.docs = new int[][] { doc };
+        model.docs = new int[][]{doc};
 
         System.out.println("Sampling " + niters + " iteration for inference!");
         for (model.liter = 1; model.liter <= niters; model.liter++) {

@@ -1,23 +1,111 @@
 package org.talos.vec.store;
 
-import gnu.trove.iterator.TLongIntIterator;
-import gnu.trove.iterator.TLongObjectIterator;
-import gnu.trove.map.TLongIntMap;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import gnu.trove.iterator.TLongIntIterator;
+import gnu.trove.iterator.TLongObjectIterator;
+import gnu.trove.map.TLongIntMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SerializerHelper {
 
     private static final Logger logger = LoggerFactory.getLogger(SerializerHelper.class);
+    private final Kryo kryo = new Kryo();
+    private BasisSerializer bSerial = new BasisSerializer();
+    private SparseVectorSetSerializer svsSerial = new SparseVectorSetSerializer();
+    private RecommendationSerializer rSerial = new RecommendationSerializer();
+
+    public SerializerHelper() {
+        kryo.register(Basis.class, bSerial);
+        kryo.register(VectorSet.class, svsSerial);
+        kryo.register(Recommendation.class, rSerial);
+    }
+
+    public BasisSerializer serializerBasis() {
+        return bSerial;
+    }
+
+    public SparseVectorSetSerializer serializerSparseVectorSet() {
+        return svsSerial;
+    }
+
+    public RecommendationSerializer serializerRecommendation() {
+        return rSerial;
+    }
+
+    public Basis readB(Input input) {
+        return bSerial.read(kryo, input, Basis.class);
+    }
+
+    public void writeB(Output output, Basis base) {
+        bSerial.write(kryo, output, base);
+    }
+
+    public VectorSet readSVS(Basis basis, Input input) {
+        svsSerial.setBasis(basis);
+        return svsSerial.read(kryo, input, VectorSet.class);
+    }
+
+    public Recommendation readR(VectorSet source, VectorSet target, Input input) {
+        rSerial.setSource(source);
+        rSerial.setTarget(target);
+        return rSerial.read(kryo, input, Recommendation.class);
+    }
+
+    public Map<String, VectorSet> readVectorSets(Input input, Basis base) {
+        Map<String, VectorSet> vectorSets = new HashMap<String, VectorSet>();
+        int size = kryo.readObject(input, int.class);
+        while (size > 0) {
+            VectorSet vectorSet = readSVS(base, input);
+            vectorSets.put(vectorSet.key(), vectorSet);
+            size--;
+        }
+        return vectorSets;
+    }
+
+    public void writeVectorSets(Output output, Map<String, VectorSet> vectorSets) {
+        kryo.writeObject(output, vectorSets.size());
+        for (String key : vectorSets.keySet()) {
+            VectorSet vectorSet = vectorSets.get(key);
+            kryo.writeObject(output, vectorSet);
+        }
+    }
+
+    public Map<String, Recommendation> readRecommendations(Input input, Map<String, VectorSet> vectorSets) {
+        Map<String, Recommendation> recs = new HashMap<String, Recommendation>();
+        int size = kryo.readObject(input, int.class);
+        while (size > 0) {
+            String srcKey = kryo.readObject(input, String.class);
+            String tgtKey = kryo.readObject(input, String.class);
+            VectorSet src = vectorSets.get(srcKey);
+            VectorSet tgt = vectorSets.get(tgtKey);
+            Recommendation rec = readR(src, tgt, input);
+            recs.put(srcKey + '_' + tgtKey, rec);
+            src.addListener(rec);
+            if (src != tgt) {
+                tgt.addListener(rec);
+            }
+            size--;
+        }
+        return recs;
+    }
+
+    public void writeRecommendations(Output output, Map<String, Recommendation> recommendations) {
+        kryo.writeObject(output, recommendations.size());
+        for (String key : recommendations.keySet()) {
+            Recommendation rec = recommendations.get(key);
+            rec.clean();
+            kryo.writeObject(output, rec.source.key());
+            kryo.writeObject(output, rec.target.key());
+            kryo.writeObject(output, rec);
+        }
+    }
 
     public static class BasisSerializer extends Serializer<Basis> {
 
@@ -165,98 +253,6 @@ public class SerializerHelper {
                     kryo.writeObject(output, sorter.scores[size]);
                 }
             }
-        }
-    }
-
-    private final Kryo                kryo      = new Kryo();
-
-    private BasisSerializer           bSerial   = new BasisSerializer();
-    private SparseVectorSetSerializer svsSerial = new SparseVectorSetSerializer();
-    private RecommendationSerializer  rSerial   = new RecommendationSerializer();
-
-    public SerializerHelper() {
-        kryo.register(Basis.class, bSerial);
-        kryo.register(VectorSet.class, svsSerial);
-        kryo.register(Recommendation.class, rSerial);
-    }
-
-    public BasisSerializer serializerBasis() {
-        return bSerial;
-    }
-
-    public SparseVectorSetSerializer serializerSparseVectorSet() {
-        return svsSerial;
-    }
-
-    public RecommendationSerializer serializerRecommendation() {
-        return rSerial;
-    }
-
-    public Basis readB(Input input) {
-        return bSerial.read(kryo, input, Basis.class);
-    }
-
-    public void writeB(Output output, Basis base) {
-        bSerial.write(kryo, output, base);
-    }
-
-    public VectorSet readSVS(Basis basis, Input input) {
-        svsSerial.setBasis(basis);
-        return svsSerial.read(kryo, input, VectorSet.class);
-    }
-
-    public Recommendation readR(VectorSet source, VectorSet target, Input input) {
-        rSerial.setSource(source);
-        rSerial.setTarget(target);
-        return rSerial.read(kryo, input, Recommendation.class);
-    }
-
-    public Map<String, VectorSet> readVectorSets(Input input, Basis base) {
-        Map<String, VectorSet> vectorSets = new HashMap<String, VectorSet>();
-        int size = kryo.readObject(input, int.class);
-        while (size > 0) {
-            VectorSet vectorSet = readSVS(base, input);
-            vectorSets.put(vectorSet.key(), vectorSet);
-            size--;
-        }
-        return vectorSets;
-    }
-
-    public void writeVectorSets(Output output, Map<String, VectorSet> vectorSets) {
-        kryo.writeObject(output, vectorSets.size());
-        for (String key : vectorSets.keySet()) {
-            VectorSet vectorSet = vectorSets.get(key);
-            kryo.writeObject(output, vectorSet);
-        }
-    }
-
-    public Map<String, Recommendation> readRecommendations(Input input, Map<String, VectorSet> vectorSets) {
-        Map<String, Recommendation> recs = new HashMap<String, Recommendation>();
-        int size = kryo.readObject(input, int.class);
-        while (size > 0) {
-            String srcKey = kryo.readObject(input, String.class);
-            String tgtKey = kryo.readObject(input, String.class);
-            VectorSet src = vectorSets.get(srcKey);
-            VectorSet tgt = vectorSets.get(tgtKey);
-            Recommendation rec = readR(src, tgt, input);
-            recs.put(srcKey + '_' + tgtKey, rec);
-            src.addListener(rec);
-            if (src != tgt) {
-                tgt.addListener(rec);
-            }
-            size--;
-        }
-        return recs;
-    }
-
-    public void writeRecommendations(Output output, Map<String, Recommendation> recommendations) {
-        kryo.writeObject(output, recommendations.size());
-        for (String key : recommendations.keySet()) {
-            Recommendation rec = recommendations.get(key);
-            rec.clean();
-            kryo.writeObject(output, rec.source.key());
-            kryo.writeObject(output, rec.target.key());
-            kryo.writeObject(output, rec);
         }
     }
 }

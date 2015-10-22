@@ -5,18 +5,18 @@ import org.slf4j.LoggerFactory;
 
 public class Sorter {
 
-    private static final Logger logger    = LoggerFactory.getLogger(Sorter.class);
+    private static final Logger logger = LoggerFactory.getLogger(Sorter.class);
 
-    int                         limits    = 20;
+    int limits = 20;
 
-    int                         size      = 0;
-    float                       waterline = 0f;
+    int size = 0;
+    float waterline = 0f;
 
-    long[]                      vecids;
-    float[]                     scores;
+    long[] vecids;
+    float[] scores;
 
-    long                        id;
-    Recommendation              container;
+    long id;
+    Recommendation container;
 
     public Sorter(Recommendation container, long vecid, int limits) {
         this.id = vecid;
@@ -110,8 +110,8 @@ public class Sorter {
 
     public void add(long vecid, float score) {
         if (this.size == 0) {
-            this.vecids = new long[] { vecid };
-            this.scores = new float[] { score };
+            this.vecids = new long[]{vecid};
+            this.scores = new float[]{score};
             this.size = this.size + 1;
             container.addReverseIndex(id, vecid);
         } else {

@@ -1,32 +1,25 @@
 package org.talos.voc.tool;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import org.talos.nlp.Token;
+import org.talos.util.Sort;
+import org.talos.util.StringBuffer;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import org.talos.nlp.Token;
-import org.talos.nlp.Token;
-import org.talos.util.StringBuffer;
-import org.talos.util.Sort;
 
 /**
  * Jcseg dictionary merge class. all the duplicate entries will be removed,
  * sorted them by natural order.
- * 
+ * <p>
  * demo: 人事部/nt/ren shi bu/人事管理部門,人事管理部 . <br />
- * 
+ * <p>
  * <ul>
  * <li>1. the pinyin will be merged.</li>
  * <li>2. the part of the speech will be merged.</li>
  * <li>3. the synonyms words will be merged.</li>
  * </ul>
- * 
+ *
  * @author chenxin <chenxin619315@gmail.com>
  */
 public class DicMerge {
@@ -41,7 +34,7 @@ public class DicMerge {
     /**
      * merge two jcseg dictionary files, remove the duplicate entries and store
      * the entris in a specified file. <br />
-     * 
+     *
      * @param srcFiles
      * @param dstfile
      * @return int

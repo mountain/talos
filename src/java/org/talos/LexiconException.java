@@ -2,7 +2,7 @@ package org.talos;
 
 /**
  * JCSeg Dictionary configuration exception class
- * 
+ *
  * @author chenxin<chenxin619315@gmail.com>
  */
 public class LexiconException extends Exception {

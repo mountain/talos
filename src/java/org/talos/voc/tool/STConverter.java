@@ -6,7 +6,7 @@ import org.talos.util.StringBuffer;
  * Simplified and traditional chinese convert class. all the search work base on
  * {@link String#indexOf(int)}. you may store all the words in a HashMap for the
  * purpuse of a faster fetch.
- * 
+ *
  * @author chenxin <chenxin619315@gmail.com>
  */
 public class STConverter {
@@ -20,7 +20,7 @@ public class STConverter {
     /**
      * convert the simplified words to traditional words of the specified
      * string.
-     * 
+     *
      * @param str
      * @return String
      */
@@ -50,7 +50,7 @@ public class STConverter {
     /**
      * convert the traditional words to simplified words. of the specified
      * string.
-     * 
+     *
      * @param str
      * @return String
      */

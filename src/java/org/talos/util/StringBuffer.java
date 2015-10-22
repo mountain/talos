@@ -2,7 +2,7 @@ package org.talos.util;
 
 /**
  * string buffer class. <br />
- * 
+ *
  * @author chenxin<chenxin619315@gmail.com>
  */
 public class StringBuffer {
@@ -11,7 +11,7 @@ public class StringBuffer {
      * buffer char array.
      */
     private char buff[];
-    private int  count;
+    private int count;
 
     /**
      * create a buffer with a default length 16. <br />
@@ -23,7 +23,7 @@ public class StringBuffer {
 
     /**
      * create a buffer with a specified length. <br />
-     * 
+     *
      * @param length
      */
     public StringBuffer(int length) {
@@ -35,7 +35,7 @@ public class StringBuffer {
 
     /**
      * create a buffer with a specified string. <br />
-     * 
+     *
      * @param str
      */
     public StringBuffer(String str) {
@@ -69,9 +69,8 @@ public class StringBuffer {
 
     /**
      * append a string to the buffer. <br />
-     * 
-     * @param str
-     *            string to append to
+     *
+     * @param str string to append to
      */
     public void append(String str) {
         if (str == null)
@@ -86,12 +85,10 @@ public class StringBuffer {
 
     /**
      * append parts of the chars to the buffer. <br />
-     * 
+     *
      * @param chars
-     * @param start
-     *            the start index.
-     * @param length
-     *            length of chars to append to.
+     * @param start  the start index.
+     * @param length length of chars to append to.
      */
     public void append(char[] chars, int start, int length) {
         if (chars == null)
@@ -113,7 +110,7 @@ public class StringBuffer {
 
     /**
      * append some chars to the buffer. <br />
-     * 
+     *
      * @param chars
      */
     public void append(char[] chars) {
@@ -122,9 +119,8 @@ public class StringBuffer {
 
     /**
      * append a char to the buffer. <br />
-     * 
-     * @param c
-     *            the char to append to
+     *
+     * @param c the char to append to
      */
     public void append(char c) {
         if (count == buff.length)
@@ -134,7 +130,7 @@ public class StringBuffer {
 
     /**
      * return the lenght of the buffer. <br />
-     * 
+     *
      * @return int the length of the buffer.
      */
     public int length() {
@@ -173,7 +169,7 @@ public class StringBuffer {
 
     /**
      * return the chars of the buffer. <br />
-     * 
+     *
      * @return char[]
      */
     public char[] buffer() {
@@ -189,7 +185,7 @@ public class StringBuffer {
 
     /**
      * return the string of the current buffer. <br />
-     * 
+     *
      * @return String
      * @see Object#toString()
      */

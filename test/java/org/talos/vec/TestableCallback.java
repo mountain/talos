@@ -5,12 +5,10 @@ import static org.junit.Assert.assertEquals;
 
 public abstract class TestableCallback extends Callback {
 
-    protected int    realStatus  = 0;
+    protected int realStatus = 0;
     protected String realMessage = null;
-    protected String realType    = "";
+    protected String realType = "";
     protected Object realPayload = null;
-
-    public abstract void excepted();
 
     public static TestableCallback noop() {
         return new TestableCallback() {
@@ -19,6 +17,8 @@ public abstract class TestableCallback extends Callback {
             }
         };
     }
+
+    public abstract void excepted();
 
     @Override
     public void response() {

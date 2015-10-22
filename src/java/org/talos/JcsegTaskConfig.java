@@ -1,103 +1,127 @@
 package org.talos;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
 import org.talos.util.Util;
 import org.talos.voc.DictionaryFactory;
 
+import java.io.*;
+import java.util.Properties;
+
 /**
  * Jcseg segmentation task config class . <br />
- * 
+ *
  * @author chenxin<chenxin619315@gmail.com>
  * @see Config
  */
 public class JcsegTaskConfig {
 
-    /** jar home directory. */
-    public static String       JAR_HOME              = null;
-    /** default lexicon property file name */
-    public static final String LEX_PROPERTY_FILE     = "jcseg.properties";
-    /** simple algorithm or complex algorithm */
-    public static final int    SIMPLE_MODE           = 1;
-    public static final int    COMPLEX_MODE          = 2;
-
-    /** maximum length for maximum match(5-7) */
-    public int                 MAX_LENGTH            = 5;
+    /**
+     * default lexicon property file name
+     */
+    public static final String LEX_PROPERTY_FILE = "jcseg.properties";
+    /**
+     * simple algorithm or complex algorithm
+     */
+    public static final int SIMPLE_MODE = 1;
+    public static final int COMPLEX_MODE = 2;
+    /**
+     * jar home directory.
+     */
+    public static String JAR_HOME = null;
+    /**
+     * maximum length for maximum match(5-7)
+     */
+    public int MAX_LENGTH = 5;
 
     /**
      * maximum length for the chinese words after the LATIN word. use to match
      * chinese and english mix word, like 'B超,AA制...'
      */
-    public int                 MIX_CN_LENGTH         = 2;
+    public int MIX_CN_LENGTH = 2;
 
-    /** identify the chinese name? */
-    public boolean             I_CN_NAME             = false;
+    /**
+     * identify the chinese name?
+     */
+    public boolean I_CN_NAME = false;
 
-    /** the max length for the adron of the chinese last name.like 老陈 “老” */
-    public int                 MAX_CN_LNADRON        = 1;
+    /**
+     * the max length for the adron of the chinese last name.like 老陈 “老”
+     */
+    public int MAX_CN_LNADRON = 1;
 
-    /** wether to load the pinying of the CJK_WORDS */
-    public boolean             LOAD_CJK_PINYIN       = false;
+    /**
+     * wether to load the pinying of the CJK_WORDS
+     */
+    public boolean LOAD_CJK_PINYIN = false;
 
-    /** append the pinying to the splited Token */
-    public boolean             APPEND_CJK_PINYIN     = false;
+    /**
+     * append the pinying to the splited Token
+     */
+    public boolean APPEND_CJK_PINYIN = false;
 
-    /** append the part of speech. */
-    public boolean             APPEND_PART_OF_SPEECH = false;
+    /**
+     * append the part of speech.
+     */
+    public boolean APPEND_PART_OF_SPEECH = false;
 
-    /** wether to load the syn word of the CJK_WORDS. */
-    public boolean             LOAD_CJK_SYN          = false;
+    /**
+     * wether to load the syn word of the CJK_WORDS.
+     */
+    public boolean LOAD_CJK_SYN = false;
 
-    /** append the syn word to the splited Token. */
-    public boolean             APPEND_CJK_SYN        = true;
+    /**
+     * append the syn word to the splited Token.
+     */
+    public boolean APPEND_CJK_SYN = true;
 
-    /** wether to load the word's part of speech */
-    public boolean             LOAD_CJK_POS          = false;
+    /**
+     * wether to load the word's part of speech
+     */
+    public boolean LOAD_CJK_POS = false;
 
     /**
      * the threshold of the single word that is a single word when it and the
      * last char of the name make up a word.
      */
-    public int                 NAME_SINGLE_THRESHOLD = 1000000;
+    public int NAME_SINGLE_THRESHOLD = 1000000;
 
-    /** the maxinum length for the text bettween the pair punctution. */
-    public int                 PPT_MAX_LENGTH        = 15;
+    /**
+     * the maxinum length for the text bettween the pair punctution.
+     */
+    public int PPT_MAX_LENGTH = 15;
 
-    /** clear away the stopword. */
-    public boolean             CLEAR_STOPWORD        = false;
+    /**
+     * clear away the stopword.
+     */
+    public boolean CLEAR_STOPWORD = false;
 
-    /** chinese numeric to Arabic . */
-    public boolean             CNNUM_TO_ARABIC       = true;
+    /**
+     * chinese numeric to Arabic .
+     */
+    public boolean CNNUM_TO_ARABIC = true;
 
-    /** chinese fraction to arabic fraction . */
-    public boolean             CNFRA_TO_ARABIC       = true;
+    /**
+     * chinese fraction to arabic fraction .
+     */
+    public boolean CNFRA_TO_ARABIC = true;
 
     /* Wether to do the secondary split for complex latin compose */
-    public boolean             EN_SECOND_SEG         = true;
+    public boolean EN_SECOND_SEG = true;
     /* Less length for the second split to make up a word */
-    public int                 STOKEN_MIN_LEN        = 1;
-
+    public int STOKEN_MIN_LEN = 1;
+    public boolean KEEP_UNREG_WORDS = false;
     /* keep puncutations */
-    private String             KEEP_PUNCTUATIONS     = "@%&.'#+";
-
-    public boolean             KEEP_UNREG_WORDS      = false;
-
-    private String             prefix                = "lex";
-    private String             suffix                = "lex";
-    private String[]           lexPath               = null;              /*
+    private String KEEP_PUNCTUATIONS = "@%&.'#+";
+    private String prefix = "lex";
+    private String suffix = "lex";
+    private String[] lexPath = null;              /*
                                                                             * lexicon
                                                                             * direcotry
                                                                             * path
                                                                             * array
                                                                             * .
                                                                             */
-    private boolean            lexAutoload           = false;
-    private int                polltime              = 10;
+    private boolean lexAutoload = false;
+    private int polltime = 10;
 
     public JcsegTaskConfig() {
         this(null);
@@ -114,11 +138,9 @@ public class JcsegTaskConfig {
 
     /**
      * reset the value of its options from a propertie file . <br />
-     * 
-     * @param proFile
-     *            path of jcseg.properties file. when null is givend, jcseg will
-     *            look up the default jcseg.properties file. <br />
-     * 
+     *
+     * @param proFile path of jcseg.properties file. when null is givend, jcseg will
+     *                look up the default jcseg.properties file. <br />
      * @throws IOException
      */
     public void resetFromPropertyFile(String proFile) throws IOException {
@@ -242,7 +264,9 @@ public class JcsegTaskConfig {
             KEEP_PUNCTUATIONS = lexPro.getProperty("jcseg.keeppunctuations");
     }
 
-    /** property about lexicon file. */
+    /**
+     * property about lexicon file.
+     */
     public String getLexiconFilePrefix() {
         return prefix;
     }
@@ -251,7 +275,9 @@ public class JcsegTaskConfig {
         return suffix;
     }
 
-    /** return the lexicon directory path */
+    /**
+     * return the lexicon directory path
+     */
     public String[] getLexiconPath() {
         return lexPath;
     }
@@ -260,7 +286,9 @@ public class JcsegTaskConfig {
         this.lexPath = lexPath;
     }
 
-    /** about lexicon autoload */
+    /**
+     * about lexicon autoload
+     */
     public boolean isAutoload() {
         return lexAutoload;
     }

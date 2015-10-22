@@ -2,13 +2,13 @@ package org.talos.nlp;
 
 public class Token {
 
-    private int      freq   = 0;
-    private int      type;
-    private int      pos;
-    private String   value;
-    private String   pinyin = null;
-    private String[] tags   = null;
-    private String[] synm   = null;
+    private int freq = 0;
+    private int type;
+    private int pos;
+    private String value;
+    private String pinyin = null;
+    private String[] tags = null;
+    private String[] synm = null;
 
     public Token(String value, int type) {
         this.value = value;

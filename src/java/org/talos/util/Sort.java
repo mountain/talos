@@ -3,12 +3,12 @@ package org.talos.util;
 /**
  * All kind of Sort alogrithm implemented method. use the default compare
  * method.
- * 
+ *
  * @author chenxin <chenxin619315@gmail.com>
  */
 public class Sort {
 
-    private static final int   CUTOFF = 11;
+    private static final int CUTOFF = 11;
     /*
      * private static final int[] GAPS = new int[]{ 1, 5, 13, 43, 113, 297, 815,
      * 1989, 4711, 11969, 27901, 84801, 213331, 543749, //1000th 1355339,
@@ -21,17 +21,16 @@ public class Sort {
      * generate with 9*pow(4, j) - 9 * pow(2, j) + 1, and pow(4, j) - 3 * pow(2,
      * j) + 1 .<br />
      */
-    private static final int[] GAPS   = new int[] { 1, 5, 19, 41, 109, 209, 505, 929, 2161, 8929, 16001, 36289, 64769,
+    private static final int[] GAPS = new int[]{1, 5, 19, 41, 109, 209, 505, 929, 2161, 8929, 16001, 36289, 64769,
             146305, 260609,
             587521, // 1000th
             1045505, 2354689, 4188161, 9427969, 16764929, 37730305, 67084289, 150958081, 268386305, 603906049,
-            1073643521, 2147483647   };
+            1073643521, 2147483647};
 
     /**
      * insert sort method. <br />
-     * 
-     * @param arr
-     *            an array of a comparable items.
+     *
+     * @param arr an array of a comparable items.
      */
     public static <T extends Comparable<? super T>> void insertionSort(T[] arr) {
         int j;
@@ -47,9 +46,8 @@ public class Sort {
 
     /**
      * shell sort algorithm. <br />
-     * 
-     * @param arr
-     *            an array of Comparable items.
+     *
+     * @param arr an array of Comparable items.
      */
     public static <T extends Comparable<? super T>> void shellSort(T[] arr) {
         int j, k = 0, gap;
@@ -71,9 +69,8 @@ public class Sort {
 
     /**
      * merge sort algorithm.
-     * 
-     * @param arr
-     *            an array of Comparable item.
+     *
+     * @param arr an array of Comparable item.
      */
     @SuppressWarnings("unchecked")
     public static <T extends Comparable<? super T>> void mergeSort(T[] arr) {
@@ -88,15 +85,11 @@ public class Sort {
 
     /**
      * internal method to make a recursive call. <br />
-     * 
-     * @param arr
-     *            an array of Comparable items. <br />
-     * @param tmpArr
-     *            temp array to placed the merged result. <br />
-     * @param left
-     *            left-most index of the subarray. <br />
-     * @param right
-     *            right-most index of the subarray. <br />
+     *
+     * @param arr    an array of Comparable items. <br />
+     * @param tmpArr temp array to placed the merged result. <br />
+     * @param left   left-most index of the subarray. <br />
+     * @param right  right-most index of the subarray. <br />
      */
     private static <T extends Comparable<? super T>> void mergeSort(T[] arr, T[] tmpArr, int left, int right) {
         // recursive way
@@ -123,17 +116,12 @@ public class Sort {
 
     /**
      * internal method to merge the sorted halves of a subarray. <br />
-     * 
-     * @param arr
-     *            an array of Comparable items. <br />
-     * @param tmpArr
-     *            temp array to placed the merged result. <br />
-     * @param leftPos
-     *            left-most index of the subarray. <br />
-     * @param rightPos
-     *            right start index of the subarray. <br />
-     * @param endPos
-     *            right-most index of the subarray. <br />
+     *
+     * @param arr      an array of Comparable items. <br />
+     * @param tmpArr   temp array to placed the merged result. <br />
+     * @param leftPos  left-most index of the subarray. <br />
+     * @param rightPos right start index of the subarray. <br />
+     * @param endPos   right-most index of the subarray. <br />
      */
     private static <T extends Comparable<? super T>> void merge(T[] arr, T[] tmpArr, int lPos, int rPos, int rEnd) {
         int lEnd = rPos - 1;
@@ -162,13 +150,10 @@ public class Sort {
 
     /**
      * method to swap elements in an array.<br />
-     * 
-     * @param arr
-     *            an array of Objects. <br />
-     * @param idx1
-     *            the index of the first element. <br />
-     * @param idx2
-     *            the index of the second element. <br />
+     *
+     * @param arr  an array of Objects. <br />
+     * @param idx1 the index of the first element. <br />
+     * @param idx2 the index of the second element. <br />
      */
     private static <T> void swapReferences(T[] arr, int idx1, int idx2) {
         T tmp = arr[idx1];
@@ -178,9 +163,8 @@ public class Sort {
 
     /**
      * quick sort algorithm. <br />
-     * 
-     * @param arr
-     *            an array of Comparable items. <br />
+     *
+     * @param arr an array of Comparable items. <br />
      */
     public static <T extends Comparable<? super T>> void quicksort(T[] arr) {
         quicksort(arr, 0, arr.length - 1);
@@ -189,13 +173,10 @@ public class Sort {
     /**
      * get the median of the left, center and right. <br />
      * order these and hide the pivot by put it the end of of the array. <br />
-     * 
-     * @param arr
-     *            an array of Comparable. <br />
-     * @param left
-     *            the most-left index of the subarray. <br />
-     * @param right
-     *            the most-right index of the subarray.<br />
+     *
+     * @param arr   an array of Comparable. <br />
+     * @param left  the most-left index of the subarray. <br />
+     * @param right the most-right index of the subarray.<br />
      * @return T
      */
     private static <T extends Comparable<? super T>> T median(T[] arr, int left, int right) {
@@ -216,13 +197,10 @@ public class Sort {
     /**
      * method to sort an subarray from start to end with insertion sort
      * algorithm. <br />
-     * 
-     * @param arr
-     *            an array of Comparable items. <br />
-     * @param start
-     *            the begining position. <br />
-     * @param end
-     *            the end position. <br />
+     *
+     * @param arr   an array of Comparable items. <br />
+     * @param start the begining position. <br />
+     * @param end   the end position. <br />
      */
     public static <T extends Comparable<? super T>> void insertionSort(T[] arr, int start, int end) {
         int i;
@@ -238,13 +216,10 @@ public class Sort {
 
     /**
      * internal method to sort the array with quick sort algorithm. <br />
-     * 
-     * @param arr
-     *            an array of Comparable Items. <br />
-     * @param left
-     *            the left-most index of the subarray. <br />
-     * @param right
-     *            the right-most index of the subarray. <br />
+     *
+     * @param arr   an array of Comparable Items. <br />
+     * @param left  the left-most index of the subarray. <br />
+     * @param right the right-most index of the subarray. <br />
      */
     private static <T extends Comparable<? super T>> void quicksort(T[] arr, int left, int right) {
         if (left + CUTOFF <= right) {
@@ -253,7 +228,7 @@ public class Sort {
 
             // start partitioning
             int i = left, j = right - 1;
-            for (;;) {
+            for (; ; ) {
                 while (arr[++i].compareTo(pivot) < 0)
                     ;
                 while (arr[--j].compareTo(pivot) > 0)
@@ -279,11 +254,9 @@ public class Sort {
 
     /**
      * quick select algorithm. <br />
-     * 
-     * @param arr
-     *            an array of Comparable items. <br />
-     * @param k
-     *            the k-th small index.
+     *
+     * @param arr an array of Comparable items. <br />
+     * @param k   the k-th small index.
      */
     public static <T extends Comparable<? super T>> void quickSelect(T[] arr, int k) {
         quickSelect(arr, 0, arr.length - 1, k);
@@ -291,15 +264,11 @@ public class Sort {
 
     /**
      * internal method to find the Kth small element for the given array. <br />
-     * 
-     * @param arr
-     *            an array of Comparable items. <br />
-     * @param left
-     *            the left-most index of the subarray. <br />
-     * @param right
-     *            the right-most index of the subarray. <br />
-     * @param k
-     *            the k-th small element.
+     *
+     * @param arr   an array of Comparable items. <br />
+     * @param left  the left-most index of the subarray. <br />
+     * @param right the right-most index of the subarray. <br />
+     * @param k     the k-th small element.
      */
     private static <T extends Comparable<? super T>> void quickSelect(T[] arr, int left, int right, int k) {
         if (left + CUTOFF <= right) {
@@ -307,7 +276,7 @@ public class Sort {
             T pivot = median(arr, left, right);
 
             int i = left, j = right - 1;
-            for (;;) {
+            for (; ; ) {
                 while (arr[++i].compareTo(pivot) < 0)
                     ;
                 while (arr[--j].compareTo(pivot) > 0)
@@ -333,11 +302,9 @@ public class Sort {
 
     /**
      * bucket sort algorithm. <br />
-     * 
-     * @param arr
-     *            an int array. <br />
-     * @param m
-     *            the large-most one for all the Integers in arr
+     *
+     * @param arr an int array. <br />
+     * @param m   the large-most one for all the Integers in arr
      */
     public static void bucketSort(int[] arr, int m) {
         int[] count = new int[m];
@@ -357,11 +324,9 @@ public class Sort {
 
     /**
      * bucket sort algorithm. <br />
-     * 
-     * @param arr
-     *            an array of Integer items. <br />
-     * @param m
-     *            the large-most one for all the Integers in arr
+     *
+     * @param arr an array of Integer items. <br />
+     * @param m   the large-most one for all the Integers in arr
      */
     public static void bucketSort(Integer[] arr, int m) {
         int[] count = new int[m];

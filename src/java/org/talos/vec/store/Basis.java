@@ -1,24 +1,19 @@
 package org.talos.vec.store;
 
 import gnu.trove.list.array.TIntArrayList;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.talos.Exception;
 import org.talos.vec.event.BasisListener;
 
+import java.util.*;
+
 public class Basis {
 
-    String                       key;
+    String key;
 
-    List<String>                 schema;
+    List<String> schema;
 
     private Map<String, Integer> compIndex;
-    private List<BasisListener>  listeners;
+    private List<BasisListener> listeners;
 
     public Basis(String key) {
         this.key = key;
@@ -42,6 +37,60 @@ public class Basis {
         this.schema = schema;
         this.compIndex = compIndex;
         this.listeners = new ArrayList<BasisListener>();
+    }
+
+    public static void densify(int size, int sparseFactor, int[] pairs, float[] result) {
+        int length = pairs.length;
+        int index = 0, cursor = 0;
+        while (cursor < size) {
+            if (index < length && cursor == pairs[index]) {
+                float val = (Math.round(((float) pairs[index + 1]) / sparseFactor * 1000)) / 1000f;
+                result[cursor] = val;
+                index = index + 2;
+            } else {
+                result[cursor] = 0f;
+            }
+            cursor++;
+        }
+    }
+
+    public static float[] densify(int size, int sparseFactor, int[] pairs) {
+        float[] result = new float[size];
+        densify(size, sparseFactor, pairs, result);
+        return result;
+    }
+
+    public static void sparsify(int sparseFactor, float[] distr, int[] result) {
+        int cursor = 0, idx = 0, length = result.length;
+        for (float ftmp : distr) {
+            int itmp = Math.round(ftmp * sparseFactor);
+            if (itmp != 0) {
+                result[idx] = cursor;
+                result[idx + 1] = itmp;
+            }
+            cursor++;
+            idx = idx + 2;
+        }
+        for (int i = idx; i < length; ) {
+            result[i++] = -1;
+            result[i++] = 0;
+        }
+    }
+
+    public static int[] sparsify(int sparseFactor, float[] distr) {
+        TIntArrayList resultList = new TIntArrayList();
+
+        int cursor = 0;
+        for (float ftmp : distr) {
+            int itmp = Math.round(ftmp * sparseFactor);
+            if (itmp != 0) {
+                resultList.add(cursor);
+                resultList.add(itmp);
+            }
+            cursor++;
+        }
+
+        return resultList.toArray();
     }
 
     public String key() {
@@ -86,60 +135,6 @@ public class Basis {
         for (BasisListener l : listeners) {
             l.onBasisRevised(this, old, base);
         }
-    }
-
-    public static void densify(int size, int sparseFactor, int[] pairs, float[] result) {
-        int length = pairs.length;
-        int index = 0, cursor = 0;
-        while (cursor < size) {
-            if (index < length && cursor == pairs[index]) {
-                float val = (Math.round(((float) pairs[index + 1]) / sparseFactor * 1000)) / 1000f;
-                result[cursor] = val;
-                index = index + 2;
-            } else {
-                result[cursor] = 0f;
-            }
-            cursor++;
-        }
-    }
-
-    public static float[] densify(int size, int sparseFactor, int[] pairs) {
-        float[] result = new float[size];
-        densify(size, sparseFactor, pairs, result);
-        return result;
-    }
-
-    public static void sparsify(int sparseFactor, float[] distr, int[] result) {
-        int cursor = 0, idx = 0, length = result.length;
-        for (float ftmp : distr) {
-            int itmp = Math.round(ftmp * sparseFactor);
-            if (itmp != 0) {
-                result[idx] = cursor;
-                result[idx + 1] = itmp;
-            }
-            cursor++;
-            idx = idx + 2;
-        }
-        for (int i = idx; i < length;) {
-            result[i++] = -1;
-            result[i++] = 0;
-        }
-    }
-
-    public static int[] sparsify(int sparseFactor, float[] distr) {
-        TIntArrayList resultList = new TIntArrayList();
-
-        int cursor = 0;
-        for (float ftmp : distr) {
-            int itmp = Math.round(ftmp * sparseFactor);
-            if (itmp != 0) {
-                resultList.add(cursor);
-                resultList.add(itmp);
-            }
-            cursor++;
-        }
-
-        return resultList.toArray();
     }
 
     public void addListener(BasisListener listener) {

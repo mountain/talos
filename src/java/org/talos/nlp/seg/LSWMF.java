@@ -1,9 +1,9 @@
 package org.talos.nlp.seg;
 
-import java.util.ArrayList;
-
 import org.talos.nlp.Chunk;
 import org.talos.util.IFn;
+
+import java.util.ArrayList;
 
 public class LSWMF implements IFn<Chunk[], Chunk[]> {
 

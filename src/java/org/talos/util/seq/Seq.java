@@ -4,6 +4,14 @@ import org.talos.util.ISeq;
 
 public class Seq<T> implements ISeq<T> {
 
+    protected T head;
+    protected ISeq<T> tail;
+
+    protected Seq(T head, ISeq<T> tail) {
+        this.head = head;
+        this.tail = tail;
+    }
+
     public static final <S> ISeq<S> empty() {
         return new Seq<S>(null, null);
     }
@@ -22,14 +30,6 @@ public class Seq<T> implements ISeq<T> {
 
     public static final <S> int count(ISeq<S> seq) {
         return seq.count();
-    }
-
-    protected T head;
-    protected ISeq<T> tail;
-
-    protected Seq(T head, ISeq<T> tail) {
-        this.head = head;
-        this.tail = tail;
     }
 
     @Override

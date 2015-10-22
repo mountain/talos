@@ -5,18 +5,18 @@ import java.util.Map;
 
 /**
  * a class to deal with the text bettween the pair punctuations. <br />
- * 
+ *
  * @author chenxin<chenxin619315@gmail.com>
  */
 public class PairedPunct {
 
-    private static final Character[]         PAIR_PUNCTUATION = {
+    private static final Character[] PAIR_PUNCTUATION = {
                                                               /*
                                                                * '“', '”', '‘',
                                                                * '’',
-                                                               */'《', '》', '『', '』', '【', '】' };
+                                                               */'《', '》', '『', '』', '【', '】'};
 
-    private static Map<Character, Character> pairPunctuation  = null;
+    private static Map<Character, Character> pairPunctuation = null;
 
     static {
         pairPunctuation = new HashMap<Character, Character>((int) (PAIR_PUNCTUATION.length / 1.7) + 1, 0.85f);
@@ -26,9 +26,8 @@ public class PairedPunct {
 
     /**
      * check the given char is pair punctuation or not. <br />
-     * 
-     * @param c
-     * <br />
+     *
+     * @param c       <br />
      * @param boolean true for it is and false for not.
      */
     public static boolean isPairPunctuation(char c) {
@@ -37,7 +36,7 @@ public class PairedPunct {
 
     /**
      * get the pair punctuation' pair.
-     * 
+     *
      * @param c
      * @return char
      */

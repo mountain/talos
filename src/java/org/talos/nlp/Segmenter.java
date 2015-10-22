@@ -1,107 +1,94 @@
 package org.talos.nlp;
 
 import gnu.trove.list.array.TIntArrayList;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.PushbackReader;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.LinkedList;
-
 import org.talos.JcsegTaskConfig;
 import org.talos.nlp.lex.CnNum;
 import org.talos.nlp.lex.EnSCMix;
 import org.talos.nlp.lex.PairedPunct;
-import org.talos.nlp.seg.LAST;
-import org.talos.nlp.seg.LAWL;
-import org.talos.nlp.seg.LSWMF;
-import org.talos.nlp.seg.MM;
-import org.talos.nlp.seg.SVWL;
+import org.talos.nlp.seg.*;
 import org.talos.util.IFn;
 import org.talos.util.StringBuffer;
 import org.talos.voc.Dictionary;
 import org.talos.voc.ILexicon;
 
+import java.io.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+
 public class Segmenter {
 
     // to check the Chinese and English mixed word.
-    public static final int                   CHECK_CE_MASK = 1 << 0;
+    public static final int CHECK_CE_MASK = 1 << 0;
     // to check the Chinese fraction.
-    public static final int                   CHECK_CF_MASK = 1 << 1;
+    public static final int CHECK_CF_MASK = 1 << 1;
     // to start the Latin secondary segmentation.
-    public static final int                   START_SS_MASK = 1 << 2;
+    public static final int START_SS_MASK = 1 << 2;
 
-    public static final IFn<Chunk[], Chunk[]> last          = new LAST();
-    public static final IFn<Chunk[], Chunk[]> lawl          = new LAWL();
-    public static final IFn<Chunk[], Chunk[]> lswmf         = new LSWMF();
-    public static final IFn<Chunk[], Chunk[]> mm            = new MM();
-    public static final IFn<Chunk[], Chunk[]> svwl          = new SVWL();
-
-    /* current position for the given stream. */
-    protected int                             idx;
-    protected PushbackReader                  reader        = null;
-    /* CJK word cache poll */
-    protected LinkedList<Token>               wordPool      = new LinkedList<Token>();
-    protected StringBuffer                    isb;
-    protected TIntArrayList                   ialist;
-
-    // Segmentation function control mask
-    protected int                             ctrlMask      = 0;
-
-    /* the dictionary and task config */
-    protected Dictionary                      dic;
-    protected JcsegTaskConfig                 config;
-
-    public static final String[] NAME_POSPEECH      = { "nr" };
-    public static final String[] NUMERIC_POSPEECH   = { "m" };
-    public static final String[] EN_POSPEECH        = { "en" };
-    public static final String[] MIX_POSPEECH       = { "mix" };
-    public static final String[] PPT_POSPEECH       = { "nz" };
-    public static final String[] PUNCTUATION        = { "w" };
-    public static final String[] UNRECOGNIZE        = { "urg" };
+    public static final IFn<Chunk[], Chunk[]> last = new LAST();
+    public static final IFn<Chunk[], Chunk[]> lawl = new LAWL();
+    public static final IFn<Chunk[], Chunk[]> lswmf = new LSWMF();
+    public static final IFn<Chunk[], Chunk[]> mm = new MM();
+    public static final IFn<Chunk[], Chunk[]> svwl = new SVWL();
+    public static final String[] NAME_POSPEECH = {"nr"};
+    public static final String[] NUMERIC_POSPEECH = {"m"};
+    public static final String[] EN_POSPEECH = {"en"};
+    public static final String[] MIX_POSPEECH = {"mix"};
+    public static final String[] PPT_POSPEECH = {"nz"};
+    public static final String[] PUNCTUATION = {"w"};
+    public static final String[] UNRECOGNIZE = {"urg"};
     /**
      * China,JPanese,Korean words
      */
-    public static final int      T_CJK_WORD         = 1;
+    public static final int T_CJK_WORD = 1;
     /**
      * chinese and english mix word. like B超,SIM卡.
      */
-    public static final int      T_MIXED_WORD       = 2;
+    public static final int T_MIXED_WORD = 2;
     /**
      * chinese last name.
      */
-    public static final int      T_CN_NAME          = 3;
+    public static final int T_CN_NAME = 3;
     /**
      * chinese nickname. like: 老陈
      */
-    public static final int      T_CN_NICKNAME      = 4;
+    public static final int T_CN_NICKNAME = 4;
     /**
      * latain series. including the arabic numbers.
      */
-    public static final int      T_BASIC_LATIN      = 5;
+    public static final int T_BASIC_LATIN = 5;
     /**
      * letter number like 'ⅠⅡ'
      */
-    public static final int      T_LETTER_NUMBER    = 6;
+    public static final int T_LETTER_NUMBER = 6;
     /**
      * other number like '①⑩⑽㈩'
      */
-    public static final int      T_OTHER_NUMBER     = 7;
+    public static final int T_OTHER_NUMBER = 7;
     /**
      * pinyin
      */
-    public static final int      T_CJK_PINYIN       = 8;
+    public static final int T_CJK_PINYIN = 8;
     /**
      * Chinese numeric
      */
-    public static final int      T_CN_NUMERIC       = 9;
-    public static final int      T_PUNCTUATION      = 10;
+    public static final int T_CN_NUMERIC = 9;
+    public static final int T_PUNCTUATION = 10;
     /**
      * useless chars like the CJK punctuation
      */
-    public static final int      T_UNRECOGNIZE_WORD = 11;
+    public static final int T_UNRECOGNIZE_WORD = 11;
+    /* current position for the given stream. */
+    protected int idx;
+    protected PushbackReader reader = null;
+    /* CJK word cache poll */
+    protected LinkedList<Token> wordPool = new LinkedList<Token>();
+    protected StringBuffer isb;
+    protected TIntArrayList ialist;
+    // Segmentation function control mask
+    protected int ctrlMask = 0;
+    /* the dictionary and task config */
+    protected Dictionary dic;
+    protected JcsegTaskConfig config;
 
     public Segmenter(JcsegTaskConfig config, Dictionary dic) throws IOException {
         this(null, config, dic);
@@ -113,6 +100,67 @@ public class Segmenter {
         isb = new StringBuffer(64);
         ialist = new TIntArrayList(15);
         reset(input);
+    }
+
+    /**
+     * check the specified char is CJK, Thai... char true will be return if it
+     * is or return false.
+     *
+     * @param c
+     * @return boolean
+     */
+    static boolean isCJKChar(int c) {
+        if (Character.getType(c) == Character.OTHER_LETTER)
+            return true;
+        return false;
+    }
+
+    /**
+     * check the specified char is a basic latin and russia and greece letter
+     * true will be return if it is or return false.
+     * <p>
+     * this method can recognize full-width char and letter.
+     *
+     * @param c
+     * @return boolean
+     */
+    static boolean isEnChar(int c) {
+        /*
+         * int type = Character.getType(c); Character.UnicodeBlock cu =
+         * Character.UnicodeBlock.of(c); if ( ! Character.isWhitespace(c) && (cu
+         * == Character.UnicodeBlock.BASIC_LATIN || type ==
+         * Character.DECIMAL_DIGIT_NUMBER || type == Character.LOWERCASE_LETTER
+         * || type == Character.UPPERCASE_LETTER || type ==
+         * Character.TITLECASE_LETTER || type == Character.MODIFIER_LETTER))
+         * return true; return false;
+         */
+        return (EnSCMix.isHWEnChar(c) || EnSCMix.isFWEnChar(c));
+    }
+
+    /**
+     * check the specified char is Letter number like 'ⅠⅡ' true will be return
+     * if it is, or return false. <br />
+     *
+     * @param c
+     * @return boolean
+     */
+    static boolean isLetterNumber(int c) {
+        if (Character.getType(c) == Character.LETTER_NUMBER)
+            return true;
+        return false;
+    }
+
+    /**
+     * check the specified char is other number like '①⑩⑽㈩' true will be return
+     * if it is, or return false. <br />
+     *
+     * @param c
+     * @return boolean
+     */
+    static boolean isOtherNumber(int c) {
+        if (Character.getType(c) == Character.OTHER_NUMBER)
+            return true;
+        return false;
     }
 
     public void reset(String input) throws IOException {
@@ -127,7 +175,7 @@ public class Segmenter {
 
     /**
      * read the next char from the current position
-     * 
+     *
      * @throws IOException
      */
     protected int readNext() throws IOException {
@@ -139,7 +187,7 @@ public class Segmenter {
 
     /**
      * push back the data to the stream.
-     * 
+     *
      * @param data
      * @throws IOException
      */
@@ -153,17 +201,8 @@ public class Segmenter {
     }
 
     /**
-     * set the dictionary of the current segmentor. <br />
-     * 
-     * @param dic
-     */
-    public void setDict(Dictionary dic) {
-        this.dic = dic;
-    }
-
-    /**
      * get the current dictionary instance . <br />
-     * 
+     *
      * @return Dictionary
      */
     public Dictionary getDict() {
@@ -171,21 +210,30 @@ public class Segmenter {
     }
 
     /**
-     * set the current task config . <br />
-     * 
-     * @param config
+     * set the dictionary of the current segmentor. <br />
+     *
+     * @param dic
      */
-    public void setConfig(JcsegTaskConfig config) {
-        this.config = config;
+    public void setDict(Dictionary dic) {
+        this.dic = dic;
     }
 
     /**
      * get the current task config instance. <br />
-     * 
+     *
      * @param JcsegTaskConfig
      */
     public JcsegTaskConfig getConfig() {
         return config;
+    }
+
+    /**
+     * set the current task config . <br />
+     *
+     * @param config
+     */
+    public void setConfig(JcsegTaskConfig config) {
+        this.config = config;
     }
 
     public Token next() throws IOException {
@@ -209,14 +257,14 @@ public class Segmenter {
                     /*
                      * find the next CJK word. the process will be different
                      * with the different algorithm
-                     * 
+                     *
                      * @see getBestCJKChunk() from SimpleSeg or Segmenter.
                      */
                     w = null;
 
                     /*
                      * @istep 1:
-                     * 
+                     *
                      * check if there is chinese numeric. make sure
                      * chars[cjkidx] is a chinese numeric and it is not the last
                      * word.
@@ -231,10 +279,10 @@ public class Segmenter {
                          * < chars.length && chars[cjkidx+1] == '分' &&
                          * chars[cjkidx+2] == '之' &&
                          * CnNum.isCNNumeric(chars[cjkidx+3]) > -1. }}}
-                         * 
+                         *
                          * checkCF will be reset to be 'TRUE' it num is a
                          * chinese fraction.
-                         * 
+                         *
                          * @added 2013-12-14.
                          */
                         if ((ctrlMask & CHECK_CF_MASK) != 0) {
@@ -347,7 +395,7 @@ public class Segmenter {
 
                     /*
                      * @istep 2:
-                     * 
+                     *
                      * find the chinese name.
                      */
                     int T = -1;
@@ -394,7 +442,7 @@ public class Segmenter {
 
                     /*
                      * @istep 3:
-                     * 
+                     *
                      * reach the end of the chars - the last word. check the
                      * existence of the chinese and english mixed word
                      */
@@ -422,7 +470,7 @@ public class Segmenter {
 
                     /*
                      * no ce word found, store the english word.
-                     * 
+                     *
                      * @reader: (2013-08-31 added) the newly found letter or
                      * digit word "enAfter" token will be handled at last cause
                      * we have to handle the pinyin and the syn words first.
@@ -437,7 +485,7 @@ public class Segmenter {
 
                     /*
                      * @istep 4:
-                     * 
+                     *
                      * check and append the pinyin and the syn words.
                      */
                     // add the pinyin to the pool
@@ -545,7 +593,7 @@ public class Segmenter {
                 /*
                  * here: 1. the punctuation is clear. 2. the pair text is null
                  * or being cleared.
-                 * 
+                 *
                  * @date 2013-09-06
                  */
                 if (w == null && w2 == null)
@@ -612,10 +660,10 @@ public class Segmenter {
     /**
      * Check and append the synoyms words of specified word included the CJK and
      * basic latin words.
-     * 
+     * <p>
      * All the synoyms words share the same position, part of speech, word type
      * with the primitive word.
-     * 
+     *
      * @param w
      */
     private void appendLatinSyn(Token w) {
@@ -638,12 +686,12 @@ public class Segmenter {
      * Do the secondary split for the specified complex latin word. This will
      * split a complex english, arabic, punctuation compose word to multiple
      * simple parts. Like 'qq2013' will split to 'qq' and '2013' .
-     * 
+     * <p>
      * And all the sub words share the same type and part of speech with the
      * primitive word.
-     * 
+     * <p>
      * You should check the config.EN_SECOND_SEG before invoke this method.
-     * 
+     *
      * @param w
      */
     public void enSecondSeg(Token w) {
@@ -711,7 +759,7 @@ public class Segmenter {
 
     /**
      * find the chinese name from the position of the given word.
-     * 
+     *
      * @param chars
      * @param index
      * @param chunk
@@ -724,14 +772,14 @@ public class Segmenter {
         if (chunk.tokens().length == 2) {
             Token w = chunk.tokens()[1];
             switch (w.length()) {
-            case 1:
-                if (dic.match(ILexicon.CN_SNAME, w.value())) {
-                    isb.append(w.value());
-                    return isb.toString();
-                }
-                return null;
-            case 2:
-            case 3:
+                case 1:
+                    if (dic.match(ILexicon.CN_SNAME, w.value())) {
+                        isb.append(w.value());
+                        return isb.toString();
+                    }
+                    return null;
+                case 2:
+                case 3:
                 /*
                  * there is only two Words in the chunk. case 2: like: 这本书是陈高的,
                  * chunk: 陈_高的 more: 瓜子和坚果,chunk: 和_坚果 (1.6.8前版本有歧义) case 3:
@@ -739,25 +787,25 @@ public class Segmenter {
                  * word. like: 这本书是陈美丽的, chunk: 陈_美丽的 2.single name: the char
                  * and the two chars after it make up a word. -ignore
                  */
-                String d1 = new String(w.value().charAt(0) + "");
-                String d2 = new String(w.value().charAt(1) + "");
-                if (dic.match(ILexicon.CN_DNAME_1, d1) && dic.match(ILexicon.CN_DNAME_2, d2)) {
-                    isb.append(d1);
-                    isb.append(d2);
-                    return isb.toString();
-                }
+                    String d1 = new String(w.value().charAt(0) + "");
+                    String d2 = new String(w.value().charAt(1) + "");
+                    if (dic.match(ILexicon.CN_DNAME_1, d1) && dic.match(ILexicon.CN_DNAME_2, d2)) {
+                        isb.append(d1);
+                        isb.append(d2);
+                        return isb.toString();
+                    }
                 /*
                  * the name char of the single name and the char after it make
                  * up a word.
                  */
-                else if (dic.match(ILexicon.CN_SNAME, d1)) {
-                    Token iw = dic.get(ILexicon.CJK_WORD, d2);
-                    if (iw != null && iw.freq() >= config.NAME_SINGLE_THRESHOLD) {
-                        isb.append(d1);
-                        return isb.toString();
+                    else if (dic.match(ILexicon.CN_SNAME, d1)) {
+                        Token iw = dic.get(ILexicon.CJK_WORD, d2);
+                        if (iw != null && iw.freq() >= config.NAME_SINGLE_THRESHOLD) {
+                            isb.append(d1);
+                            return isb.toString();
+                        }
                     }
-                }
-                return null;
+                    return null;
             }
         }
         /* three Words in the chunk */
@@ -765,94 +813,94 @@ public class Segmenter {
             Token w1 = chunk.tokens()[1];
             Token w2 = chunk.tokens()[2];
             switch (w1.length()) {
-            case 1:
+                case 1:
                 /* check if it is a double name first. */
-                if (dic.match(ILexicon.CN_DNAME_1, w1.value())) {
-                    if (w2.length() == 1) {
+                    if (dic.match(ILexicon.CN_DNAME_1, w1.value())) {
+                        if (w2.length() == 1) {
                         /* real double name? */
-                        if (dic.match(ILexicon.CN_DNAME_2, w2.value())) {
-                            isb.append(w1.value());
-                            isb.append(w2.value());
-                            return isb.toString();
-                        }
+                            if (dic.match(ILexicon.CN_DNAME_2, w2.value())) {
+                                isb.append(w1.value());
+                                isb.append(w2.value());
+                                return isb.toString();
+                            }
                         /* not a real double name, check if it is a single name. */
-                        else if (dic.match(ILexicon.CN_SNAME, w1.value())) {
-                            isb.append(w1.value());
-                            return isb.toString();
+                            else if (dic.match(ILexicon.CN_SNAME, w1.value())) {
+                                isb.append(w1.value());
+                                return isb.toString();
+                            }
                         }
-                    }
                     /*
                      * double name: char 2 and the char after it make up a word.
                      * like: 陈志高兴奋极了, chunk:陈_志_高兴 (兴和后面成词) like: 陈志高的,
                      * chunk:陈_志_高的 ("的"的阕值Config.SINGLE_THRESHOLD) like:
                      * 陈高兴奋极了, chunk:陈_高_兴奋 (single name)
                      */
-                    else {
-                        String d1 = new String(w2.value().charAt(0) + "");
-                        int index_ = index + chunk.tokens()[0].length() + 2;
-                        Token[] ws = getNextMatch(chars, index_);
-                        // System.out.println("index:"+index+":"+chars[index]+", "+ws[0]);
+                        else {
+                            String d1 = new String(w2.value().charAt(0) + "");
+                            int index_ = index + chunk.tokens()[0].length() + 2;
+                            Token[] ws = getNextMatch(chars, index_);
+                            // System.out.println("index:"+index+":"+chars[index]+", "+ws[0]);
                         /* is it a double name? */
-                        if (dic.match(ILexicon.CN_DNAME_2, d1)
-                                && (ws.length > 1 || ws[0].freq() >= config.NAME_SINGLE_THRESHOLD)) {
-                            isb.append(w1.value());
-                            isb.append(d1);
-                            return isb.toString();
-                        }
+                            if (dic.match(ILexicon.CN_DNAME_2, d1)
+                                    && (ws.length > 1 || ws[0].freq() >= config.NAME_SINGLE_THRESHOLD)) {
+                                isb.append(w1.value());
+                                isb.append(d1);
+                                return isb.toString();
+                            }
                         /* check if it is a single name */
-                        else if (dic.match(ILexicon.CN_SNAME, w1.value())) {
-                            isb.append(w1.value());
-                            return isb.toString();
+                            else if (dic.match(ILexicon.CN_SNAME, w1.value())) {
+                                isb.append(w1.value());
+                                return isb.toString();
+                            }
                         }
                     }
-                }
                 /* check if it is a single name. */
-                else if (dic.match(ILexicon.CN_SNAME, w1.value())) {
-                    isb.append(w1.value());
-                    return isb.toString();
-                }
-                return null;
-            case 2:
-                String d1 = new String(w1.value().charAt(0) + "");
-                String d2 = new String(w1.value().charAt(1) + "");
+                    else if (dic.match(ILexicon.CN_SNAME, w1.value())) {
+                        isb.append(w1.value());
+                        return isb.toString();
+                    }
+                    return null;
+                case 2:
+                    String d1 = new String(w1.value().charAt(0) + "");
+                    String d2 = new String(w1.value().charAt(1) + "");
                 /*
                  * it is a double name and char 1, char 2 make up a word. like:
                  * 陈美丽是对的, chunk: 陈_美丽_是 more: 都成为高速公路, chunk:都_成为_高速公路
                  * (1.6.8以前的有歧义)
                  */
-                if (dic.match(ILexicon.CN_DNAME_1, d1) && dic.match(ILexicon.CN_DNAME_2, d2)) {
-                    isb.append(w1.value());
-                    return isb.toString();
-                }
+                    if (dic.match(ILexicon.CN_DNAME_1, d1) && dic.match(ILexicon.CN_DNAME_2, d2)) {
+                        isb.append(w1.value());
+                        return isb.toString();
+                    }
                 /*
                  * it is a single name, char 1 and the char after it make up a
                  * word.
                  */
-                else if (dic.match(ILexicon.CN_SNAME, d1)) {
-                    Token iw = dic.get(ILexicon.CJK_WORD, d2);
-                    if (iw != null && iw.freq() >= config.NAME_SINGLE_THRESHOLD) {
-                        isb.append(d1);
-                        return isb.toString();
+                    else if (dic.match(ILexicon.CN_SNAME, d1)) {
+                        Token iw = dic.get(ILexicon.CJK_WORD, d2);
+                        if (iw != null && iw.freq() >= config.NAME_SINGLE_THRESHOLD) {
+                            isb.append(d1);
+                            return isb.toString();
+                        }
                     }
-                }
-                return null;
-            case 3:
+                    return null;
+                case 3:
                 /*
                  * singe name: - ignore mean the char and the two chars after it
                  * make up a word.
-                 * 
+                 *
                  * it is a double name. like: 陈美丽的人生， chunk: 陈_美丽的_人生
                  */
-                String c1 = new String(w1.value().charAt(0) + "");
-                String c2 = new String(w1.value().charAt(1) + "");
-                Token w3 = dic.get(ILexicon.CJK_WORD, w1.value().charAt(2) + "");
-                if (dic.match(ILexicon.CN_DNAME_1, c1) && dic.match(ILexicon.CN_DNAME_2, c2)
-                        && (w3 == null || w3.freq() >= config.NAME_SINGLE_THRESHOLD)) {
-                    isb.append(c1);
-                    isb.append(c2);
-                    return isb.toString();
-                }
-                return null;
+                    String c1 = new String(w1.value().charAt(0) + "");
+                    String c2 = new String(w1.value().charAt(1) + "");
+                    Token w3 = dic.get(ILexicon.CJK_WORD, w1.value().charAt(2) + "");
+                    if (dic.match(ILexicon.CN_DNAME_1, c1) && dic.match(ILexicon.CN_DNAME_2, c2)
+                            && (w3 == null || w3.freq() >= config.NAME_SINGLE_THRESHOLD)) {
+                        isb.append(c1);
+                        isb.append(c2);
+                        return isb.toString();
+                    }
+                    return null;
             }
         }
 
@@ -862,9 +910,8 @@ public class Segmenter {
     /**
      * find the Chinese double name: when the last name and the first char of
      * the name make up a word.
-     * 
-     * @param chunk
-     *            the best chunk.
+     *
+     * @param chunk the best chunk.
      * @return boolean
      */
     @Deprecated
@@ -875,15 +922,15 @@ public class Segmenter {
         if (dic.match(ILexicon.CN_LNAME, s1) && dic.match(ILexicon.CN_DNAME_1, s2)) {
             Token sec = chunk.tokens()[1];
             switch (sec.length()) {
-            case 1:
-                if (dic.match(ILexicon.CN_DNAME_2, sec.value()))
-                    return true;
-            case 2:
-                String d1 = new String(sec.value().charAt(0) + "");
-                Token _w = dic.get(ILexicon.CJK_WORD, sec.value().charAt(1) + "");
-                // System.out.println(_w);
-                if (dic.match(ILexicon.CN_DNAME_2, d1) && (_w == null || _w.freq() >= config.NAME_SINGLE_THRESHOLD))
-                    return true;
+                case 1:
+                    if (dic.match(ILexicon.CN_DNAME_2, sec.value()))
+                        return true;
+                case 2:
+                    String d1 = new String(sec.value().charAt(0) + "");
+                    Token _w = dic.get(ILexicon.CJK_WORD, sec.value().charAt(1) + "");
+                    // System.out.println(_w);
+                    if (dic.match(ILexicon.CN_DNAME_2, d1) && (_w == null || _w.freq() >= config.NAME_SINGLE_THRESHOLD))
+                        return true;
             }
         }
 
@@ -893,7 +940,7 @@ public class Segmenter {
     /**
      * load a CJK char list from the stream start from the current position.
      * till the char is not a CJK char.<br />
-     * 
+     *
      * @param c
      * @return char[]
      * @throws IOException
@@ -926,7 +973,7 @@ public class Segmenter {
     /**
      * find the letter or digit word from the current position.<br />
      * count until the char is whitespace or not letter_digit.
-     * 
+     *
      * @param c
      * @return Token
      * @throws IOException
@@ -950,7 +997,7 @@ public class Segmenter {
         int tcount = 1; // number of different char type.
         int _TYPE = EnSCMix.getEnCharType(c); // current char type.
         ctrlMask &= ~START_SS_MASK; // reset the secondary segment
-                                    // mask.
+        // mask.
 
         while ((ch = readNext()) != -1) {
             // Covert the full-width char to half-width char.
@@ -989,9 +1036,9 @@ public class Segmenter {
 
             /*
              * Char type counter. condition to start the secondary segmentation.
-             * 
+             *
              * @reader: we could do better.
-             * 
+             *
              * @added 2013-12-16
              */
             if (_ctype != _TYPE) {
@@ -1014,7 +1061,7 @@ public class Segmenter {
              * try to find a english and punctuation mixed word. this will clear
              * all the punctuation until a mixed word is found. like
              * "i love c++.", c++ will be found from token "c++.".
-             * 
+             *
              * @date 2013-08-31
              */
             if (dic.match(ILexicon.EN_PUN_WORD, __str)) {
@@ -1027,7 +1074,7 @@ public class Segmenter {
 
             /*
              * keep the en punctuation.
-             * 
+             *
              * @date 2013-09-06
              */
             pushBack(isb.charAt(t));
@@ -1039,7 +1086,7 @@ public class Segmenter {
          * @step 3: check the end condition. and the check if the token loop was
          * break by whitespace cause there is no need to continue all the
          * following work if it is.
-         * 
+         *
          * @added 2013-11-19
          */
         if (ch == -1 || _wspace) {
@@ -1088,7 +1135,7 @@ public class Segmenter {
         /*
          * Attension: make sure that (ch = readNext()) is after j <
          * Config.MIX_CN_LENGTH. or it cause the miss of the next char.
-         * 
+         *
          * @reader: (2013-09-25) we do not check the type of the char readed
          * next. so, words started with english and its length except the start
          * english part less than config.MIX_CN_LENGTH in the EC dictionary
@@ -1123,7 +1170,7 @@ public class Segmenter {
 
         /*
          * @step 5: check if there is a units for the digit.
-         * 
+         *
          * @reader: (2013-09-25) now we check the units before the step 4, so we
          * can recognize many other units that is not chinese like '℉,℃'
          */
@@ -1156,7 +1203,7 @@ public class Segmenter {
      * find the next other letter from the current position. find the letter
      * number from the current position. count until the char in the specified
      * position is not a letter number or whitespace. <br />
-     * 
+     *
      * @param c
      * @return String
      * @throws IOException
@@ -1183,7 +1230,7 @@ public class Segmenter {
      * find the other number from the current position. <br />
      * count until the char in the specified position is not a orther number or
      * whitespace. <br />
-     * 
+     *
      * @param c
      * @return String
      * @throws IOException
@@ -1210,9 +1257,8 @@ public class Segmenter {
      * find the chinese number from the current position. <br />
      * count until the char in the specified position is not a orther number or
      * whitespace. <br />
-     * 
-     * @param chars
-     *            char array of CJK items.
+     *
+     * @param chars char array of CJK items.
      * @param index
      * @return String[]
      */
@@ -1226,7 +1272,7 @@ public class Segmenter {
             /*
              * check and deal with '分之' if the current char is not a chinese
              * numeric. (try to recognize a chinese fraction)
-             * 
+             *
              * @added 2013-12-14
              */
             if (CnNum.isCNNumeric(chars[j]) == -1) {
@@ -1234,10 +1280,10 @@ public class Segmenter {
                 /*
                  * check and make sure chars[j+2] is a chinese numeric. or error
                  * will happen on situation like '四六分之' .
-                 * 
+                 *
                  * @added 2013-12-14
                  */
-                && CnNum.isCNNumeric(chars[j + 2]) != -1) {
+                        && CnNum.isCNNumeric(chars[j + 2]) != -1) {
                     isb.append(chars[j++]);
                     isb.append(chars[j++]);
                     isb.append(chars[j]);
@@ -1256,7 +1302,7 @@ public class Segmenter {
     /**
      * find pair punctuation of the given punctuation char. the purpose is to
      * get the text bettween them. <br />
-     * 
+     *
      * @param c
      * @throws IOException
      */
@@ -1340,7 +1386,7 @@ public class Segmenter {
 
         Token[] mwords = getNextMatch(chars, index), mword2, mword3;
         if (mwords.length == 1 && mwords[0].type() == ILexicon.UNMATCH_CJK_WORD) {
-            return new Chunk(new Token[] { mwords[0] });
+            return new Chunk(new Token[]{mwords[0]});
         }
 
         int idx_2, idx_3;
@@ -1357,7 +1403,7 @@ public class Segmenter {
                  * the first layer.
                  */
                 if (mword2.length == 1 && mword2[0].type() == ILexicon.UNMATCH_CJK_WORD) {
-                    return new Chunk(new Token[] { mwords[mwords.length - 1] });
+                    return new Chunk(new Token[]{mwords[mwords.length - 1]});
                 }
                 for (int y = 0; y < mword2.length; y++) {
                     // the third layer
@@ -1378,11 +1424,11 @@ public class Segmenter {
                             chunkArr.add(new Chunk(words));
                         }
                     } else {
-                        chunkArr.add(new Chunk(new Token[] { mwords[x], mword2[y] }));
+                        chunkArr.add(new Chunk(new Token[]{mwords[x], mword2[y]}));
                     }
                 }
             } else {
-                chunkArr.add(new Chunk(new Token[] { mwords[x] }));
+                chunkArr.add(new Chunk(new Token[]{mwords[x]}));
             }
         }
 
@@ -1421,67 +1467,6 @@ public class Segmenter {
             }
         }
         return afterChunks[0];
-    }
-
-    /**
-     * check the specified char is CJK, Thai... char true will be return if it
-     * is or return false.
-     * 
-     * @param c
-     * @return boolean
-     */
-    static boolean isCJKChar(int c) {
-        if (Character.getType(c) == Character.OTHER_LETTER)
-            return true;
-        return false;
-    }
-
-    /**
-     * check the specified char is a basic latin and russia and greece letter
-     * true will be return if it is or return false.
-     * 
-     * this method can recognize full-width char and letter.
-     * 
-     * @param c
-     * @return boolean
-     */
-    static boolean isEnChar(int c) {
-        /*
-         * int type = Character.getType(c); Character.UnicodeBlock cu =
-         * Character.UnicodeBlock.of(c); if ( ! Character.isWhitespace(c) && (cu
-         * == Character.UnicodeBlock.BASIC_LATIN || type ==
-         * Character.DECIMAL_DIGIT_NUMBER || type == Character.LOWERCASE_LETTER
-         * || type == Character.UPPERCASE_LETTER || type ==
-         * Character.TITLECASE_LETTER || type == Character.MODIFIER_LETTER))
-         * return true; return false;
-         */
-        return (EnSCMix.isHWEnChar(c) || EnSCMix.isFWEnChar(c));
-    }
-
-    /**
-     * check the specified char is Letter number like 'ⅠⅡ' true will be return
-     * if it is, or return false. <br />
-     * 
-     * @param c
-     * @return boolean
-     */
-    static boolean isLetterNumber(int c) {
-        if (Character.getType(c) == Character.LETTER_NUMBER)
-            return true;
-        return false;
-    }
-
-    /**
-     * check the specified char is other number like '①⑩⑽㈩' true will be return
-     * if it is, or return false. <br />
-     * 
-     * @param c
-     * @return boolean
-     */
-    static boolean isOtherNumber(int c) {
-        if (Character.getType(c) == Character.OTHER_NUMBER)
-            return true;
-        return false;
     }
 
 }

@@ -7,7 +7,7 @@ public class LAST implements IFn<Chunk[], Chunk[]> {
 
     @Override
     public Chunk[] call(Chunk[] chunks) {
-        return new Chunk[] { chunks[0] };
+        return new Chunk[]{chunks[0]};
     }
 
 }

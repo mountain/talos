@@ -30,9 +30,9 @@ package org.talos.util;
 
 public class Pair implements Comparable<Pair> {
 
-    public Object         first;
-    public Comparable     second;
     public static boolean naturalOrder = false;
+    public Object first;
+    public Comparable second;
 
     public Pair(Object k, Comparable v) {
         first = k;

@@ -5,15 +5,15 @@ public class Chunk {
     private Token[] tokens;
 
     // average words length
-    private double  awl    = -1D;
+    private double awl = -1D;
 
     // words variance
-    private double  wv     = -1D;
+    private double wv = -1D;
 
     // single word morphemic freedom
-    private double  swmf   = -1D;
+    private double swmf = -1D;
 
-    private int     length = -1;
+    private int length = -1;
 
     public Chunk(Token[] tokens) {
         this.tokens = tokens;

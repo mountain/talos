@@ -2,7 +2,7 @@ package org.talos;
 
 /**
  * JCSeg exception class
- * 
+ *
  * @author chenxin<chenxin619315@gmail.com>
  */
 public class JcsegException extends Exception {

@@ -1,18 +1,17 @@
 package org.talos.vec;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.talos.Config;
-import org.talos.vec.Engine;
 import org.talos.vec.event.VectorSetListener;
 import org.talos.vec.store.Basis;
 import org.talos.vec.store.VectorSet;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 public class Benchmark {
 
-    public static long start       = -1;
+    public static long start = -1;
     public static long accumulated = 0;
 
     public static void main(String[] args) {

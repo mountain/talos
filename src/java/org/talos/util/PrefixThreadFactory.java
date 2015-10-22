@@ -4,7 +4,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PrefixThreadFactory implements ThreadFactory {
-    final AtomicInteger  id = new AtomicInteger(0);
+    final AtomicInteger id = new AtomicInteger(0);
     private final String prefix;
 
     public PrefixThreadFactory(String prefix) {

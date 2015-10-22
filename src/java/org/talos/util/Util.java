@@ -4,14 +4,14 @@ import java.io.File;
 
 /**
  * static method for jcseg.
- * 
+ *
  * @author chenxin<chenxin619315@gmail.com>
  */
 public class Util {
 
     /**
      * get the absolute parent path for the jar file.
-     * 
+     *
      * @param o
      * @return String
      */

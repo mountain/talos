@@ -13,7 +13,7 @@
     (let [es-result (proxy-es req)
           req (assoc req :es-result es-result)
           api-result
-            ((wrap-defaults (wrap-json-response apiroutes) api-defaults) req)]
+          ((wrap-defaults (wrap-json-response apiroutes) api-defaults) req)]
       (if (nil? es-result) api-result es-result))
     (catch Throwable e (log/error e))))
 

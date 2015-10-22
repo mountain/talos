@@ -1,24 +1,5 @@
 package org.talos.vec;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talos.Context;
@@ -30,89 +11,34 @@ import org.talos.vec.event.RecommendationListener;
 import org.talos.vec.event.VectorSetListener;
 import org.talos.vec.store.Basis;
 
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class Engine implements ExecutorListener {
 
     private static final String version = "0.1.0";
+    private static final Logger logger = LoggerFactory.getLogger(Engine.class);
 
-    enum Kind {
-        BASIS, VECTORS, RECOMM
-    };
-
-    private static final Logger logger         = LoggerFactory.getLogger(Engine.class);
-
+    ;
     private final AtomicInteger commandCounter = new AtomicInteger();
-
-    public abstract class AsyncSafeRunner implements Runnable {
-        String scope;
-
-        public AsyncSafeRunner(String scope) {
-            this.scope = scope;
-        }
-
-        public abstract void invoke();
-
-        public void run() {
-            try {
-                invoke();
-                commandCounter.incrementAndGet();
-            } catch (Throwable ex) {
-                logger.error(ex.getMessage(), ex);
-            }
-        }
-    }
-
-    public abstract class SafeRunner implements Runnable {
-        Callback callback;
-        String   scope;
-
-        public SafeRunner(String scope, Callback callback) {
-            this.scope = scope;
-            this.callback = callback;
-        }
-
-        public abstract void invoke();
-
-        public void run() {
-            try {
-                invoke();
-                commandCounter.incrementAndGet();
-            } catch (Throwable ex) {
-                String errMsg = ex.getMessage();
-                logger.error(errMsg, ex);
-                callback.error(errMsg);
-            } finally {
-                callback.response();
-            }
-        }
-    }
-
-    public class RejectedHandler implements RejectedExecutionHandler {
-
-        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-            logger.error("server reject request");
-        }
-
-    }
-
-    private Context                            context;
-
-    private final ExecutorService              mngmExec    = Executors.newSingleThreadExecutor();
-    private final Map<String, Kind>            kindOf      = new HashMap<String, Kind>();
-    private final Map<String, String>          basisOf     = new HashMap<String, String>();
-    private final Map<String, List<String>>    vectorsOf   = new HashMap<String, List<String>>();
-    private final Map<String, Set<String>>     rtargetsOf  = new HashMap<String, Set<String>>();
-    private final Map<String, Executor>        bases       = new HashMap<String, Executor>();
-
+    private final ExecutorService mngmExec = Executors.newSingleThreadExecutor();
+    private final Map<String, Kind> kindOf = new HashMap<String, Kind>();
+    private final Map<String, String> basisOf = new HashMap<String, String>();
+    private final Map<String, List<String>> vectorsOf = new HashMap<String, List<String>>();
+    private final Map<String, Set<String>> rtargetsOf = new HashMap<String, Set<String>>();
+    private final Map<String, Executor> bases = new HashMap<String, Executor>();
     private final Map<String, ExecutorService> writerExecs = new HashMap<String, ExecutorService>();
-    private final ThreadPoolExecutor           readerPool  = new ThreadPoolExecutor(53, 83, 37, TimeUnit.SECONDS,
-                                                                   new ArrayBlockingQueue<Runnable>(100),
-                                                                   new PrefixThreadFactory("reader"),
-                                                                   new RejectedHandler());
-
-    private final Map<String, Integer>         counters    = new HashMap<String, Integer>();
-    private final int                          bycount;
-    private final String                       savePath;
-    private final long                         startTime   = new Date().getTime();
+    private final ThreadPoolExecutor readerPool = new ThreadPoolExecutor(53, 83, 37, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<Runnable>(100),
+            new PrefixThreadFactory("reader"),
+            new RejectedHandler());
+    private final Map<String, Integer> counters = new HashMap<String, Integer>();
+    private final int bycount;
+    private final String savePath;
+    private final long startTime = new Date().getTime();
+    private Context context;
 
     public Engine(Context simContext) {
         String separator = System.getProperty("file.separator");
@@ -271,56 +197,56 @@ public class Engine implements ExecutorListener {
             public void delete(String toDel) {
                 Kind kind = kindOf.get(toDel);
                 switch (kind) {
-                case BASIS:
-                    if (vectorsOf.containsKey(toDel)) {
-                        for (String vec : vectorsOf.get(toDel)) {
-                            for (String source : rtargetsOf.keySet()) {
-                                if (source.equals(vec)) {
-                                    for (String target : rtargetsOf.get(vec)) {
-                                        String recKey = rkey(vec, target);
-                                        basisOf.remove(recKey);
-                                        kindOf.remove(recKey);
+                    case BASIS:
+                        if (vectorsOf.containsKey(toDel)) {
+                            for (String vec : vectorsOf.get(toDel)) {
+                                for (String source : rtargetsOf.keySet()) {
+                                    if (source.equals(vec)) {
+                                        for (String target : rtargetsOf.get(vec)) {
+                                            String recKey = rkey(vec, target);
+                                            basisOf.remove(recKey);
+                                            kindOf.remove(recKey);
+                                        }
+                                        rtargetsOf.remove(vec);
+                                    } else {
+                                        rtargetsOf.get(source).remove(vec);
                                     }
-                                    rtargetsOf.remove(vec);
-                                } else {
-                                    rtargetsOf.get(source).remove(vec);
                                 }
+                                kindOf.remove(vec);
+                                basisOf.remove(vec);
                             }
-                            kindOf.remove(vec);
-                            basisOf.remove(vec);
                         }
-                    }
-                    vectorsOf.remove(toDel);
-                    kindOf.remove(toDel);
-                    basisOf.remove(toDel);
-                    bases.remove(toDel);
-                    writerExecs.remove(toDel);
-                    logger.info(String.format("basis[%s] deleted", toDel));
-                    break;
-                case VECTORS:
-                    String bkey = basisOf.get(toDel);
-                    for (String source : rtargetsOf.keySet()) {
-                        if (source.equals(toDel)) {
-                            for (String target : rtargetsOf.get(toDel)) {
-                                delete(rkey(toDel, target));
+                        vectorsOf.remove(toDel);
+                        kindOf.remove(toDel);
+                        basisOf.remove(toDel);
+                        bases.remove(toDel);
+                        writerExecs.remove(toDel);
+                        logger.info(String.format("basis[%s] deleted", toDel));
+                        break;
+                    case VECTORS:
+                        String bkey = basisOf.get(toDel);
+                        for (String source : rtargetsOf.keySet()) {
+                            if (source.equals(toDel)) {
+                                for (String target : rtargetsOf.get(toDel)) {
+                                    delete(rkey(toDel, target));
+                                }
+                                rtargetsOf.remove(toDel);
+                            } else {
+                                rtargetsOf.get(source).remove(toDel);
                             }
-                            rtargetsOf.remove(toDel);
-                        } else {
-                            rtargetsOf.get(source).remove(toDel);
                         }
-                    }
-                    vectorsOf.get(bkey).remove(toDel);
-                    basisOf.remove(toDel);
-                    kindOf.remove(toDel);
-                    bases.get(bkey).vdel(toDel);
-                    logger.info(String.format("vectorset[%s] deleted", toDel));
-                    break;
-                case RECOMM:
-                    bases.get(basisOf.get(toDel)).rdel(toDel);
-                    basisOf.remove(toDel);
-                    kindOf.remove(toDel);
-                    logger.info(String.format("recommendation[%s] deleted", toDel));
-                    break;
+                        vectorsOf.get(bkey).remove(toDel);
+                        basisOf.remove(toDel);
+                        kindOf.remove(toDel);
+                        bases.get(bkey).vdel(toDel);
+                        logger.info(String.format("vectorset[%s] deleted", toDel));
+                        break;
+                    case RECOMM:
+                        bases.get(basisOf.get(toDel)).rdel(toDel);
+                        basisOf.remove(toDel);
+                        kindOf.remove(toDel);
+                        logger.info(String.format("recommendation[%s] deleted", toDel));
+                        break;
                 }
             }
         });
@@ -511,8 +437,6 @@ public class Engine implements ExecutorListener {
         });
     }
 
-    // CURD operations for one vector in vector-set
-
     public void vget(final Callback callback, final String vkey, final long vecid) {
         validateKind("vget", vkey, Kind.VECTORS);
         final String bkey = basisOf.get(vkey);
@@ -599,6 +523,8 @@ public class Engine implements ExecutorListener {
         callback.response();
     }
 
+    // CURD operations for one vector in vector-set
+
     public void vrem(final Callback callback, final String vkey, final long vecid) {
         this.validateKind("vrem", vkey, Kind.VECTORS);
         final String bkey = basisOf.get(vkey);
@@ -614,8 +540,6 @@ public class Engine implements ExecutorListener {
         callback.ok();
         callback.response();
     }
-
-    // Internal use for client-side sparsification
 
     public void iget(final Callback callback, final String vkey, final long vecid) {
         validateExistence(vkey);
@@ -709,6 +633,8 @@ public class Engine implements ExecutorListener {
         callback.response();
     }
 
+    // Internal use for client-side sparsification
+
     public void rlist(final Callback callback, final String vkey) {
         mngmExec.execute(new SafeRunner("rlist", callback) {
 
@@ -785,7 +711,7 @@ public class Engine implements ExecutorListener {
     }
 
     public void xacc(Callback callback, final String vkeyTarget, final long vecidTarget, final String vkeyOperand,
-            final long vecidOperand) {
+                     final long vecidOperand) {
         validateKind("xacc", vkeyTarget, Kind.VECTORS);
         validateId(vecidTarget);
         validateKind("xacc", vkeyOperand, Kind.VECTORS);
@@ -814,7 +740,7 @@ public class Engine implements ExecutorListener {
     }
 
     public void xprd(final Callback callback, final String vkeyTarget, final long vecidTarget,
-            final String vkeyOperand, final long[] vecidOperands) {
+                     final String vkeyOperand, final long[] vecidOperands) {
         validateKind("xprd", vkeyTarget, Kind.VECTORS);
         validateId(vecidTarget);
         validateKind("xprd", vkeyOperand, Kind.VECTORS);
@@ -927,6 +853,62 @@ public class Engine implements ExecutorListener {
         basisOf.remove(rkey);
         rtargetsOf.get(vkeyFrom).remove(vkeyTo);
         kindOf.remove(rkey);
+    }
+
+    enum Kind {
+        BASIS, VECTORS, RECOMM
+    }
+
+    public abstract class AsyncSafeRunner implements Runnable {
+        String scope;
+
+        public AsyncSafeRunner(String scope) {
+            this.scope = scope;
+        }
+
+        public abstract void invoke();
+
+        public void run() {
+            try {
+                invoke();
+                commandCounter.incrementAndGet();
+            } catch (Throwable ex) {
+                logger.error(ex.getMessage(), ex);
+            }
+        }
+    }
+
+    public abstract class SafeRunner implements Runnable {
+        Callback callback;
+        String scope;
+
+        public SafeRunner(String scope, Callback callback) {
+            this.scope = scope;
+            this.callback = callback;
+        }
+
+        public abstract void invoke();
+
+        public void run() {
+            try {
+                invoke();
+                commandCounter.incrementAndGet();
+            } catch (Throwable ex) {
+                String errMsg = ex.getMessage();
+                logger.error(errMsg, ex);
+                callback.error(errMsg);
+            } finally {
+                callback.response();
+            }
+        }
+    }
+
+    public class RejectedHandler implements RejectedExecutionHandler {
+
+        public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+            logger.error("server reject request");
+        }
+
     }
 
 }

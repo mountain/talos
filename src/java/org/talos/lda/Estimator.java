@@ -6,7 +6,7 @@ public class Estimator {
 
     // output model
     protected Model training;
-    Option          option;
+    Option option;
 
     public void estimate() {
         System.out.println("Sampling " + training.niters + " iteration!");
@@ -43,11 +43,9 @@ public class Estimator {
 
     /**
      * Do sampling
-     * 
-     * @param m
-     *            document number
-     * @param n
-     *            word number
+     *
+     * @param m document number
+     * @param n word number
      * @return topic id
      */
     public int sampling(int m, int n) {

@@ -1,15 +1,15 @@
 package org.talos.voc;
 
+import org.talos.JcsegTaskConfig;
+
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-
-import org.talos.JcsegTaskConfig;
 
 /**
  * Dictionary Factory to create Dictionary instance . <br />
  * a path of the class that has extends the Dictionary class must be given
  * first. <br />
- * 
+ *
  * @author chenxin<chenxin619315@gmail.com>
  */
 public class DictionaryFactory {
@@ -19,7 +19,7 @@ public class DictionaryFactory {
 
     /**
      * create a new Dictionary instance . <br />
-     * 
+     *
      * @param __dicClass
      * @return Dictionary
      */
@@ -38,13 +38,13 @@ public class DictionaryFactory {
     /**
      * create a default Dictionary instance of class
      * com.webssky.jcseg.Dictionary . <br />
-     * 
-     * @see Dictionary
+     *
      * @return Dictionary
+     * @see Dictionary
      */
     public static Dictionary createDefaultDictionary(JcsegTaskConfig config, boolean sync) {
-        Dictionary dic = createDictionary("org.talos.voc.Dictionary", new Class[] { JcsegTaskConfig.class,
-                Boolean.class }, new Object[] { config, sync });
+        Dictionary dic = createDictionary("org.talos.voc.Dictionary", new Class[]{JcsegTaskConfig.class,
+                Boolean.class}, new Object[]{config, sync});
         try {
             // load lexicon from more than one path.
             String[] lexpath = config.getLexiconPath();

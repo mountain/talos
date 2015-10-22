@@ -10,33 +10,32 @@ import gnu.trove.map.TIntFloatMap;
 import gnu.trove.map.TLongIntMap;
 import gnu.trove.map.hash.TIntFloatHashMap;
 import gnu.trove.map.hash.TLongIntHashMap;
+import org.talos.vec.event.BasisListener;
+import org.talos.vec.event.VectorSetListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.talos.vec.event.BasisListener;
-import org.talos.vec.event.VectorSetListener;
-
 public class VectorSet implements BasisListener {
 
-    public static final String      TYPE    = "sparse";
+    public static final String TYPE = "sparse";
 
-    String                          key;
+    String key;
 
-    TFloatList                      data    = new TFloatArrayList();
-    TLongIntMap                     lengths = new TLongIntHashMap();
-    TLongIntMap                     indexer = new TLongIntHashMap();
+    TFloatList data = new TFloatArrayList();
+    TLongIntMap lengths = new TLongIntHashMap();
+    TLongIntMap indexer = new TLongIntHashMap();
 
-    float                           accumuFactor;
-    int                             sparseFactor;
+    float accumuFactor;
+    int sparseFactor;
 
-    Basis                           base;
+    Basis base;
 
-    private boolean                 listening;
+    private boolean listening;
     private List<VectorSetListener> listeners;
 
-    private int[]                   iReuseList;
-    private float[]                 fReuseList;
+    private int[] iReuseList;
+    private float[] fReuseList;
 
     public VectorSet(String key, Basis base) {
         this(key, base, 0.01f, 4096);

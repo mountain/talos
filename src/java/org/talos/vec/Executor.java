@@ -1,5 +1,15 @@
 package org.talos.vec;
 
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+import org.talos.Context;
+import org.talos.Exception;
+import org.talos.vec.event.BasisListener;
+import org.talos.vec.event.ExecutorListener;
+import org.talos.vec.event.RecommendationListener;
+import org.talos.vec.event.VectorSetListener;
+import org.talos.vec.store.*;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
@@ -7,35 +17,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.talos.Context;
-import org.talos.Exception;
-import org.talos.vec.event.BasisListener;
-import org.talos.vec.event.ExecutorListener;
-import org.talos.vec.event.RecommendationListener;
-import org.talos.vec.event.VectorSetListener;
-import org.talos.vec.store.Basis;
-import org.talos.vec.store.CosineScore;
-import org.talos.vec.store.Recommendation;
-import org.talos.vec.store.SerializerHelper;
-import org.talos.vec.store.VectorSet;
-
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-
 public class Executor {
 
-    private Context                       context;
-    private Basis                         base;
-    private Map<String, VectorSet>        vectorSets      = new HashMap<String, VectorSet>();
-    private Map<String, Recommendation>   recommendations = new HashMap<String, Recommendation>();
-    private List<ExecutorListener>        listeners       = new ArrayList<ExecutorListener>();
+    private Context context;
+    private Basis base;
+    private Map<String, VectorSet> vectorSets = new HashMap<String, VectorSet>();
+    private Map<String, Recommendation> recommendations = new HashMap<String, Recommendation>();
+    private List<ExecutorListener> listeners = new ArrayList<ExecutorListener>();
 
-    private ThreadLocal<SerializerHelper> helper          = new ThreadLocal<SerializerHelper>() {
-                                                              @Override
-                                                              protected SerializerHelper initialValue() {
-                                                                  return new SerializerHelper();
-                                                              }
-                                                          };
+    private ThreadLocal<SerializerHelper> helper = new ThreadLocal<SerializerHelper>() {
+        @Override
+        protected SerializerHelper initialValue() {
+            return new SerializerHelper();
+        }
+    };
 
     public Executor(Context context, Basis base) {
         this.context = context;

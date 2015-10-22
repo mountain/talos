@@ -7,30 +7,29 @@ import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talos.vec.event.RecommendationListener;
 import org.talos.vec.event.VectorSetListener;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Recommendation implements VectorSetListener {
 
-    private static final Logger          logger         = LoggerFactory.getLogger(Recommendation.class);
+    private static final Logger logger = LoggerFactory.getLogger(Recommendation.class);
 
-    public VectorSet                     source;
-    public VectorSet                     target;
-    public CosineScore                   scoring;
+    public VectorSet source;
+    public VectorSet target;
+    public CosineScore scoring;
 
-    int                                  limit;
+    int limit;
 
-    TLongList                            sorterKeys     = new TLongArrayList();
-    TLongObjectMap<Sorter>               sorters        = new TLongObjectHashMap<Sorter>();
+    TLongList sorterKeys = new TLongArrayList();
+    TLongObjectMap<Sorter> sorters = new TLongObjectHashMap<Sorter>();
 
-    private TLongObjectMap<TLongSet>     reverseIndexer = new TLongObjectHashMap<TLongSet>();
-    private List<RecommendationListener> listeners      = new ArrayList<RecommendationListener>();
+    private TLongObjectMap<TLongSet> reverseIndexer = new TLongObjectHashMap<TLongSet>();
+    private List<RecommendationListener> listeners = new ArrayList<RecommendationListener>();
 
     public Recommendation(VectorSet source, VectorSet target) {
         this(source, target, new CosineScore(), 20);

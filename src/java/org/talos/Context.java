@@ -8,8 +8,8 @@ public class Context extends HashMap<String, Object> {
 
     private static final long serialVersionUID = -8288998975274604087L;
 
-    protected String          type;
-    protected Context         defaults;
+    protected String type;
+    protected Context defaults;
 
     public Context() {
         super();

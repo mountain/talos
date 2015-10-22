@@ -1,16 +1,16 @@
 package org.talos.seg;
 
+import org.talos.JcsegException;
+import org.talos.JcsegTaskConfig;
+import org.talos.nlp.Segmenter;
+import org.talos.nlp.Token;
+import org.talos.voc.Dictionary;
+import org.talos.voc.DictionaryFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-
-import org.talos.JcsegException;
-import org.talos.JcsegTaskConfig;
-import org.talos.nlp.Token;
-import org.talos.nlp.Segmenter;
-import org.talos.voc.Dictionary;
-import org.talos.voc.DictionaryFactory;
 
 public class JcsegTest {
 
@@ -20,34 +20,6 @@ public class JcsegTest {
         JcsegTaskConfig config = new JcsegTaskConfig();
         Dictionary dic = DictionaryFactory.createDefaultDictionary(config);
         seg = new Segmenter(config, dic);
-    }
-
-    public void segment(String str) throws IOException {
-        StringBuffer sb = new StringBuffer();
-        // seg.setLastRule(null);
-        Token word = null;
-
-        long _start = System.nanoTime();
-        boolean isFirst = true;
-        int counter = 0;
-        seg.reset(new StringReader(str));
-        while ((word = seg.next()) != null) {
-            if (isFirst) {
-                sb.append(word.value());
-                isFirst = false;
-            } else {
-                sb.append(" ");
-                sb.append(word.value());
-            }
-            // append the part of the speech
-            if (word.tags() != null) {
-                sb.append('/');
-                sb.append(word.tags()[0]);
-            }
-            // clear the allocations of the word.
-            word = null;
-            counter++;
-        }
     }
 
     public static void main(String[] args) throws JcsegException, IOException {
@@ -99,6 +71,34 @@ public class JcsegTest {
             e.printStackTrace();
         }
         System.out.println("Bye!");
+    }
+
+    public void segment(String str) throws IOException {
+        StringBuffer sb = new StringBuffer();
+        // seg.setLastRule(null);
+        Token word = null;
+
+        long _start = System.nanoTime();
+        boolean isFirst = true;
+        int counter = 0;
+        seg.reset(new StringReader(str));
+        while ((word = seg.next()) != null) {
+            if (isFirst) {
+                sb.append(word.value());
+                isFirst = false;
+            } else {
+                sb.append(" ");
+                sb.append(word.value());
+            }
+            // append the part of the speech
+            if (word.tags() != null) {
+                sb.append('/');
+                sb.append(word.tags()[0]);
+            }
+            // clear the allocations of the word.
+            word = null;
+            counter++;
+        }
     }
 
 }

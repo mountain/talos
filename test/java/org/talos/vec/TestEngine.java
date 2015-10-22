@@ -1,19 +1,19 @@
 package org.talos.vec;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class TestEngine {
 
-    private static final Logger                   logger = LoggerFactory.getLogger(TestEngine.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestEngine.class);
 
     private static final Map<Testable, Throwable> errMap = new HashMap<Testable, Throwable>();
 
-    public static Engine                          engine;
+    public static Engine engine;
 
     public static void execCmd(Object... cmds) throws Throwable {
         for (int i = 0; i < cmds.length; i = i + 2) {
@@ -465,7 +465,7 @@ public class TestEngine {
     }
 
     public static Testable xacc(final String vkeyTarget, final long vecidTarget, final String vkeyOperand,
-            final long vecidOperand) {
+                                final long vecidOperand) {
         return new Testable() {
             @Override
             public void test(TestableCallback cb) {
@@ -481,7 +481,7 @@ public class TestEngine {
     }
 
     public static Testable xprd(final String vkeyTarget, final long vecidTarget, final String vkeyOperand,
-            final long... vecidOperands) {
+                                final long... vecidOperands) {
         return new Testable() {
             @Override
             public void test(TestableCallback cb) {

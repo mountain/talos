@@ -1,31 +1,5 @@
 package org.talos.vec.engine;
 
-import static org.talos.vec.TestEngine.blist;
-import static org.talos.vec.TestEngine.bload;
-import static org.talos.vec.TestEngine.bmk;
-import static org.talos.vec.TestEngine.brev;
-import static org.talos.vec.TestEngine.bsave;
-import static org.talos.vec.TestEngine.del;
-import static org.talos.vec.TestEngine.execCmd;
-import static org.talos.vec.TestEngine.floatList;
-import static org.talos.vec.TestEngine.longList;
-import static org.talos.vec.TestEngine.ok;
-import static org.talos.vec.TestEngine.rlist;
-import static org.talos.vec.TestEngine.rmk;
-import static org.talos.vec.TestEngine.rrec;
-import static org.talos.vec.TestEngine.stringList;
-import static org.talos.vec.TestEngine.vacc;
-import static org.talos.vec.TestEngine.vadd;
-import static org.talos.vec.TestEngine.vget;
-import static org.talos.vec.TestEngine.vlist;
-import static org.talos.vec.TestEngine.vmk;
-import static org.talos.vec.TestEngine.vrem;
-import static org.talos.vec.TestEngine.vset;
-
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -34,8 +8,14 @@ import org.talos.Config;
 import org.talos.vec.Engine;
 import org.talos.vec.TestEngine;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.talos.vec.TestEngine.*;
+
 public class CosComplexTests {
-    public static Engine   engine;
+    public static Engine engine;
     public static String[] components;
 
     @BeforeClass

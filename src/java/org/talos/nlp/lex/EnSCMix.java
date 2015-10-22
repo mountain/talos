@@ -2,18 +2,18 @@ package org.talos.nlp.lex;
 
 /**
  * a class to deal with the english stop char like the english punctuation. <br />
- * 
+ *
  * @author chenxin<chenxin619315@gmail.com>
  */
 public class EnSCMix {
     // type constants
-    public static final int     EN_LETTER      = 0;
-    public static final int     EN_NUMERIC     = 1;
-    public static final int     EN_PUNCTUATION = 2;
-    public static final int     EN_WHITESPACE  = 3;
-    public static final int     EN_UNKNOW      = -1;
+    public static final int EN_LETTER = 0;
+    public static final int EN_NUMERIC = 1;
+    public static final int EN_PUNCTUATION = 2;
+    public static final int EN_WHITESPACE = 3;
+    public static final int EN_UNKNOW = -1;
 
-    private static final String EN_KEEP_CHARS  = "@%&.'#+";
+    private static final String EN_KEEP_CHARS = "@%&.'#+";
 
     /*
      * private static final Character[] EN_KEEP_CHARS = { '@', '$', '%', '^',
@@ -29,7 +29,7 @@ public class EnSCMix {
 
     /**
      * check the given char is english keep punctuation.
-     * 
+     *
      * @param c
      * @return boolean
      */
@@ -56,7 +56,7 @@ public class EnSCMix {
 
     /**
      * include the full-width and half-width char.
-     * 
+     *
      * @param u
      */
     public static boolean isEnLetter(int u) {
@@ -68,9 +68,8 @@ public class EnSCMix {
     /**
      * get the type of the english char defined in this class and start with
      * EN_. (only half-width)
-     * 
-     * @param u
-     *            char to identity.
+     *
+     * @param u char to identity.
      * @return int type keywords.
      */
     public static int getEnCharType(int u) {
@@ -90,7 +89,7 @@ public class EnSCMix {
 
     /**
      * check the given char is a half-width char or not.
-     * 
+     * <p>
      * <ul>
      * <li>32 -&gt; whitespace</li>
      * <li>33-47 -&gt; punctuations</li>
@@ -101,7 +100,7 @@ public class EnSCMix {
      * <li>97-122 -&gt; a-z</li>
      * <li>123-126 -&gt; punctuations</li>
      * </ul>
-     * 
+     *
      * @param int
      * @return boolean
      */
@@ -111,11 +110,10 @@ public class EnSCMix {
 
     /**
      * check the given char is a full-width char.
-     * 
-     * @reader: the full-width punctuation is not included here.
-     * 
+     *
      * @param c
      * @return boolean
+     * @reader: the full-width punctuation is not included here.
      */
     public static boolean isFWEnChar(int c) {
         return ((c >= 65296 && c <= 65305) || (c >= 65313 && c <= 65338) || (c >= 65345 && c < 65370));
@@ -123,7 +121,7 @@ public class EnSCMix {
 
     /**
      * check the given char is half-width punctuation.<br />
-     * 
+     *
      * @param c
      * @return boolean
      */
@@ -134,14 +132,14 @@ public class EnSCMix {
     public static boolean isCnPunctuation(int c) {
         return ((c > 65280 && c < 65296) || (c > 65305 && c < 65312) || (c > 65338 && c < 65345)
                 || (c > 65370 && c < 65382)
-        // CJK symbol and punctuations (added 2013-09-06)
-        // from http://www.unicode.org/charts/PDF/U3000.pdf
-        || (c >= 12289 && c <= 12319));
+                // CJK symbol and punctuations (added 2013-09-06)
+                // from http://www.unicode.org/charts/PDF/U3000.pdf
+                || (c >= 12289 && c <= 12319));
     }
 
     /**
      * check the given string is a whitespace. <br />
-     * 
+     *
      * @param c
      * @return boolean;
      */
@@ -152,7 +150,7 @@ public class EnSCMix {
     /**
      * check the specified char is a digit or not. true will return if it is or
      * return false this method can recognize full-with char.
-     * 
+     *
      * @param str
      * @return boolean
      */
@@ -171,7 +169,7 @@ public class EnSCMix {
 
     /**
      * check the specified char is a decimal. including the full-width char.
-     * 
+     *
      * @param str
      * @return boolean
      */
@@ -199,7 +197,7 @@ public class EnSCMix {
     /**
      * a static method to replace the full-width char to the half-width char in
      * a given string. (65281-65374 for full-width char) <br />
-     * 
+     *
      * @param str
      * @return String the new String after the replace.
      */
@@ -217,7 +215,7 @@ public class EnSCMix {
     /**
      * a static method to replace the half-width char to the full-width char. in
      * a given string. <br />
-     * 
+     *
      * @param str
      * @return String the new String after the replace.
      */

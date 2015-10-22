@@ -1,18 +1,11 @@
 package org.talos.voc;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.io.Writer;
+import org.talos.JcsegTaskConfig;
+import org.talos.nlp.Segmenter;
+import org.talos.nlp.Token;
+import org.talos.nlp.lex.EnSCMix;
+
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,28 +13,25 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.talos.JcsegTaskConfig;
-import org.talos.nlp.Segmenter;
-import org.talos.nlp.Token;
-import org.talos.nlp.lex.EnSCMix;
-
 /**
  * Dictionary abstract class. <br />
- * 
+ *
  * @author chenxin<chenxin619315@gmail.com>
  */
 public class Dictionary {
 
-    public static final String     AL_TODO_FILE   = "lex-autoload.todo";
+    public static final String AL_TODO_FILE = "lex-autoload.todo";
 
-    protected JcsegTaskConfig      config;
-    protected boolean              sync;
-
-    /** autoload thread */
-    private Thread                 autoloadThread = null;
-
-    /** hash table for the words */
-    protected Map<String, Token>[] dics           = null;
+    protected JcsegTaskConfig config;
+    protected boolean sync;
+    /**
+     * hash table for the words
+     */
+    protected Map<String, Token>[] dics = null;
+    /**
+     * autoload thread
+     */
+    private Thread autoloadThread = null;
 
     public Dictionary(JcsegTaskConfig config, Boolean sync) {
         this.config = config;
@@ -54,158 +44,6 @@ public class Dictionary {
             for (int j = 0; j < ILexicon.T_LEN; j++)
                 this.dics[j] = new HashMap<String, Token>(16, 0.80F);
         }
-    }
-
-    public JcsegTaskConfig getConfig() {
-        return config;
-    }
-
-    public void setConfig(JcsegTaskConfig config) {
-        this.config = config;
-    }
-
-    public void outputVocabulary() {
-        try {
-            SortedSet<String> set = new TreeSet<String>();
-            for (int j = 0; j < ILexicon.T_LEN; j++)
-                for (String key : dics[j].keySet())
-                    set.add(String.format("%02d\t%s\n", key.length(), key));
-            Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("voc.voc"),
-                    Charset.forName("UTF-8")));
-            for(String key : set)
-                writer.write(key);
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void loadFromLexiconFile(File file) {
-        loadWordsFromFile(config, this, file, "UTF-8");
-    }
-
-    public void loadFromLexiconFile(String file) {
-        loadWordsFromFile(config, this, new File(file), "UTF-8");
-    }
-
-    /**
-     * load the all the words form all the files under a specified lexicon
-     * directionry . <br />
-     * 
-     * @param lexDir
-     * 
-     * @throws IOException
-     */
-    public void loadFromLexiconDirectory(String lexDir) throws IOException {
-
-        File[] files = getLexiconFiles(lexDir, config.getLexiconFilePrefix(), config.getLexiconFileSuffix());
-        if (files == null)
-            return;
-
-        for (int j = 0; j < files.length; j++) {
-            loadWordsFromFile(config, this, files[j], "UTF-8");
-        }
-    }
-
-    /** start the lexicon autoload thread . */
-    public void startAutoload() {
-        if (autoloadThread != null)
-            return;
-        autoloadThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                File todo = new File(config.getLexiconPath() + "/" + AL_TODO_FILE);
-                long lastModified = todo.lastModified();
-                while (true) {
-                    // sleep for some time (seconds)
-                    try {
-                        Thread.sleep(config.getPollTime() * 1000);
-                    } catch (InterruptedException e) {
-                        break;
-                    }
-
-                    // check the update of the lex-autoload.todo
-                    if (todo.lastModified() <= lastModified)
-                        continue;
-
-                    // load words form the lexicon files
-                    try {
-                        BufferedReader reader = new BufferedReader(new FileReader(todo));
-                        String line = null;
-                        while ((line = reader.readLine()) != null) {
-                            line = line.trim();
-                            if (line.indexOf('#') != -1)
-                                continue;
-                            if ("".equals(line))
-                                continue;
-                            loadFromLexiconFile(config.getLexiconPath() + "/" + line);
-                        }
-                        reader.close();
-                        FileWriter fw = new FileWriter(todo);
-                        fw.write("");
-                        fw.close();
-
-                        lastModified = todo.lastModified();
-                        // System.out.println("newly added words loaded.");
-                    } catch (IOException e) {
-                        break;
-                    }
-                }
-                autoloadThread = null;
-            }
-        });
-        autoloadThread.setDaemon(true);
-        autoloadThread.start();
-        // System.out.println("lexicon autoload thread started!!!");
-    }
-
-    public void stopAutoload() {
-        if (autoloadThread != null) {
-            autoloadThread.interrupt();
-            autoloadThread = null;
-        }
-    }
-
-    public boolean isSync() {
-        return sync;
-    }
-
-    public boolean match(int t, String key) {
-        if (t < 0 || t >= ILexicon.T_LEN)
-            return false;
-        return dics[t].containsKey(key);
-    }
-
-    public void add(int t, String key, int type) {
-        if (t < 0 || t >= ILexicon.T_LEN)
-            return;
-        if (dics[t].get(key) == null)
-            dics[t].put(key, new Token(key, type));
-    }
-
-    public void add(int t, String key, int fre, int type) {
-        if (t < 0 || t >= ILexicon.T_LEN)
-            return;
-        if (dics[t].get(key) == null)
-            dics[t].put(key, new Token(key, fre, type));
-    }
-
-    public Token get(int t, String key) {
-        if (t < 0 || t >= ILexicon.T_LEN)
-            return null;
-        return dics[t].get(key);
-    }
-
-    public void remove(int t, String key) {
-        if (t < 0 || t >= ILexicon.T_LEN)
-            return;
-        dics[t].remove(key);
-    }
-
-    public int size(int t) {
-        if (t < 0 || t >= ILexicon.T_LEN)
-            return 0;
-        return dics[t].size();
     }
 
     public static int getIndex(String key) {
@@ -244,7 +82,7 @@ public class Dictionary {
     /**
      * get all the lexicon file under the specified path and meet the specified
      * conditions . <br />
-     * 
+     *
      * @throws IOException
      */
     public static File[] getLexiconFiles(String lexDir, String prefix, String suffix) throws IOException {
@@ -271,7 +109,7 @@ public class Dictionary {
 
     /**
      * load all the words in the specified lexicon file into the dictionary. <br />
-     * 
+     *
      * @param config
      * @param dic
      * @param file
@@ -380,7 +218,7 @@ public class Dictionary {
                              * Here: check the syn word is not exists, make sure
                              * the same syn word won't appended. (dictionary
                              * reload)
-                             * 
+                             *
                              * @date 2013-09-02
                              */
                             if (arr != null) {
@@ -409,7 +247,7 @@ public class Dictionary {
                              * Here: check the part of speech is not exists,
                              * make sure the same part of speech won't
                              * appended.(dictionary reload)
-                             * 
+                             *
                              * @date 2013-09-02
                              */
                             if (arr != null) {
@@ -442,5 +280,158 @@ public class Dictionary {
             } catch (IOException e) {
             }
         }
+    }
+
+    public JcsegTaskConfig getConfig() {
+        return config;
+    }
+
+    public void setConfig(JcsegTaskConfig config) {
+        this.config = config;
+    }
+
+    public void outputVocabulary() {
+        try {
+            SortedSet<String> set = new TreeSet<String>();
+            for (int j = 0; j < ILexicon.T_LEN; j++)
+                for (String key : dics[j].keySet())
+                    set.add(String.format("%02d\t%s\n", key.length(), key));
+            Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("voc.voc"),
+                    Charset.forName("UTF-8")));
+            for (String key : set)
+                writer.write(key);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadFromLexiconFile(File file) {
+        loadWordsFromFile(config, this, file, "UTF-8");
+    }
+
+    public void loadFromLexiconFile(String file) {
+        loadWordsFromFile(config, this, new File(file), "UTF-8");
+    }
+
+    /**
+     * load the all the words form all the files under a specified lexicon
+     * directionry . <br />
+     *
+     * @param lexDir
+     * @throws IOException
+     */
+    public void loadFromLexiconDirectory(String lexDir) throws IOException {
+
+        File[] files = getLexiconFiles(lexDir, config.getLexiconFilePrefix(), config.getLexiconFileSuffix());
+        if (files == null)
+            return;
+
+        for (int j = 0; j < files.length; j++) {
+            loadWordsFromFile(config, this, files[j], "UTF-8");
+        }
+    }
+
+    /**
+     * start the lexicon autoload thread .
+     */
+    public void startAutoload() {
+        if (autoloadThread != null)
+            return;
+        autoloadThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                File todo = new File(config.getLexiconPath() + "/" + AL_TODO_FILE);
+                long lastModified = todo.lastModified();
+                while (true) {
+                    // sleep for some time (seconds)
+                    try {
+                        Thread.sleep(config.getPollTime() * 1000);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+
+                    // check the update of the lex-autoload.todo
+                    if (todo.lastModified() <= lastModified)
+                        continue;
+
+                    // load words form the lexicon files
+                    try {
+                        BufferedReader reader = new BufferedReader(new FileReader(todo));
+                        String line = null;
+                        while ((line = reader.readLine()) != null) {
+                            line = line.trim();
+                            if (line.indexOf('#') != -1)
+                                continue;
+                            if ("".equals(line))
+                                continue;
+                            loadFromLexiconFile(config.getLexiconPath() + "/" + line);
+                        }
+                        reader.close();
+                        FileWriter fw = new FileWriter(todo);
+                        fw.write("");
+                        fw.close();
+
+                        lastModified = todo.lastModified();
+                        // System.out.println("newly added words loaded.");
+                    } catch (IOException e) {
+                        break;
+                    }
+                }
+                autoloadThread = null;
+            }
+        });
+        autoloadThread.setDaemon(true);
+        autoloadThread.start();
+        // System.out.println("lexicon autoload thread started!!!");
+    }
+
+    public void stopAutoload() {
+        if (autoloadThread != null) {
+            autoloadThread.interrupt();
+            autoloadThread = null;
+        }
+    }
+
+    public boolean isSync() {
+        return sync;
+    }
+
+    public boolean match(int t, String key) {
+        if (t < 0 || t >= ILexicon.T_LEN)
+            return false;
+        return dics[t].containsKey(key);
+    }
+
+    public void add(int t, String key, int type) {
+        if (t < 0 || t >= ILexicon.T_LEN)
+            return;
+        if (dics[t].get(key) == null)
+            dics[t].put(key, new Token(key, type));
+    }
+
+    public void add(int t, String key, int fre, int type) {
+        if (t < 0 || t >= ILexicon.T_LEN)
+            return;
+        if (dics[t].get(key) == null)
+            dics[t].put(key, new Token(key, fre, type));
+    }
+
+    public Token get(int t, String key) {
+        if (t < 0 || t >= ILexicon.T_LEN)
+            return null;
+        return dics[t].get(key);
+    }
+
+    public void remove(int t, String key) {
+        if (t < 0 || t >= ILexicon.T_LEN)
+            return;
+        dics[t].remove(key);
+    }
+
+    public int size(int t) {
+        if (t < 0 || t >= ILexicon.T_LEN)
+            return 0;
+        return dics[t].size();
     }
 }

@@ -5,7 +5,7 @@ import java.util.Map;
 
 /**
  * a class to deal with Chinese numeric. <br />
- * 
+ *
  * @author chenxin<chenxin619315@gmail.com>
  */
 public class CnNum {
@@ -14,7 +14,7 @@ public class CnNum {
      * i have put the chars into the lexicon file lex-cn-numeric.lex for the old
      * version. <r /> it's better to follow the current work.
      */
-    private static final Character[]       CN_NUMERIC = { '一', '二', '三', '四', '五', '六', '七', '八', '九', '壹', '贰', '叁',
+    private static final Character[] CN_NUMERIC = {'一', '二', '三', '四', '五', '六', '七', '八', '九', '壹', '贰', '叁',
             '肆', '伍', '陆', '柒', '捌', '玖', '○', 'Ｏ', '零', '十', '百', '千', '拾', '佰', '仟', '万', '亿', /*
                                                                                                   * '兆'
                                                                                                   * ,
@@ -24,7 +24,7 @@ public class CnNum {
                                                                                                   * ,
                                                                                                   */};
 
-    private static Map<Character, Integer> cnNumeric  = null;
+    private static Map<Character, Integer> cnNumeric = null;
 
     static {
         cnNumeric = new HashMap<Character, Integer>(40, 0.85f);
@@ -48,9 +48,8 @@ public class CnNum {
 
     /**
      * check the given char is chinese numeric or not. <br />
-     * 
-     * @param c
-     * <br />
+     *
+     * @param c <br />
      * @return boolean true for the char is chinese numeric and false for not.
      */
     public static int isCNNumeric(char c) {
@@ -62,10 +61,9 @@ public class CnNum {
 
     /**
      * a static method to turn the Chinese numeric to Arabic numbers.
-     * 
+     *
      * @param cnn
-     * @param boolea
-     *            flag
+     * @param boolea flag
      * @return int
      */
     public static int cnNumericToArabic(String cnn, boolean flag) {

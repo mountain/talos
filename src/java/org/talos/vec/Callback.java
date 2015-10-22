@@ -2,9 +2,9 @@ package org.talos.vec;
 
 public abstract class Callback {
 
-    protected int    status  = 0;
+    protected int status = 0;
     protected String message = null;
-    protected String type    = "";
+    protected String type = "";
     protected Object payload = null;
 
     public void ok() {

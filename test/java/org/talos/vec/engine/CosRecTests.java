@@ -1,19 +1,5 @@
 package org.talos.vec.engine;
 
-import static org.talos.vec.TestEngine.bmk;
-import static org.talos.vec.TestEngine.del;
-import static org.talos.vec.TestEngine.execCmd;
-import static org.talos.vec.TestEngine.longList;
-import static org.talos.vec.TestEngine.ok;
-import static org.talos.vec.TestEngine.rmk;
-import static org.talos.vec.TestEngine.rrec;
-import static org.talos.vec.TestEngine.vadd;
-import static org.talos.vec.TestEngine.vmk;
-import static org.talos.vec.TestEngine.vset;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -22,8 +8,13 @@ import org.talos.Config;
 import org.talos.vec.Engine;
 import org.talos.vec.TestEngine;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.talos.vec.TestEngine.*;
+
 public class CosRecTests {
-    public static Engine   engine;
+    public static Engine engine;
     public static String[] components;
 
     @BeforeClass

@@ -2,15 +2,14 @@ package org.talos.vec.store;
 
 import gnu.trove.map.TLongFloatMap;
 import gnu.trove.map.hash.TLongFloatHashMap;
+import org.talos.vec.event.VectorSetListener;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.talos.vec.event.VectorSetListener;
-
 public class CosineScore implements VectorSetListener {
 
-    private static String                     name   = "cosinesq";
+    private static String name = "cosinesq";
     private static Map<String, TLongFloatMap> caches = new HashMap<String, TLongFloatMap>();
 
     private float flengthsq(float[] vector) {
@@ -25,7 +24,7 @@ public class CosineScore implements VectorSetListener {
     private float ilengthsq(int[] vector) {
         int result = 0;
         int len = vector.length;
-        for (int i = 0; i < len;) {
+        for (int i = 0; i < len; ) {
             result += vector[i + 1] * vector[i + 1];
             i += 2;
         }
@@ -52,7 +51,7 @@ public class CosineScore implements VectorSetListener {
     }
 
     public float score(String srcVKey, long srcId, int[] source, int srclen, String tgtVKey, long tgtId, int[] target,
-            int tgtlen) {
+                       int tgtlen) {
         TLongFloatMap sourceCache = caches.get(srcVKey);
         TLongFloatMap targetCache = caches.get(tgtVKey);
 
